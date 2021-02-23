@@ -186,8 +186,8 @@
         "repositoryURL": "https://github.com/kean/Nuke",
         "state": {
           "branch": null,
-          "revision": "961597d324949c7003c77d602bfc4d5519b47e81",
-          "version": "9.2.4"
+          "revision": "e2eb1b7b82983c6f6a2df496e850406a78cdef05",
+          "version": "9.3.0"
         }
       },
       {

@@ -1,0 +1,42 @@
+{
+    "user" : [
+        {
+            "123e4567" : {
+                "name" : "User 1",
+                "id" : "123e4567-e89b-12d3-a456-426614174000",
+                "groups" : [
+                    {
+                        "a456" : true,
+                        "a455" : true
+                    }
+                ]
+            }
+        }
+    ],
+    "groups" : [
+        {
+            "a456" : {
+                "name" : "nom du groupe",
+                "users" : [ { "123e4567" : true }
+                ],
+                "createdBy" : "123e4567",
+                "createdDate" : "2006-01-02T15:04:05Z07:00"
+            }
+        }
+    ],
+    "messages" : [
+        {
+            "a456" : {
+                "messages" : [
+                    {
+                        "02T15" : {
+                            "text" : "ceci est le message",
+                            "sendBy" : "123e4567",
+                            "sendAt" : "2006-01-02T15:04:05Z07:00"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

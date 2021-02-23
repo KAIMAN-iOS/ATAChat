@@ -32,6 +32,16 @@ import FirebaseAuth
 import ATAConfiguration
 import Ampersand
 
+protocol ChatUser {
+    var chatId: String { get }
+    var displayName: String { get }
+}
+
+protocol Channelable {
+    var id: String? { get }
+    var name: String { get }
+}
+
 class ChannelsViewController: UITableViewController {
     var conf: ATAConfiguration!
     private let toolbarLabel: UILabel = {
@@ -45,24 +55,22 @@ class ChannelsViewController: UITableViewController {
     private var currentChannelAlertController: UIAlertController?
     
     private let db = Firestore.firestore()
-    
     private var channelReference: CollectionReference {
-        return db.collection("channels")
+        return db.collection("group")
     }
+    private var channelListener: ListenerRegistration?
     
     private var channels = [Channel]()
-    private var channelListener: ListenerRegistration?
-    private let currentUser: User
+    private let currentUser: ChatUser
     
     deinit {
         channelListener?.remove()
     }
     
-    init(currentUser: User) {
+    init(currentUser: ChatUser) {
         self.currentUser = currentUser
         super.init(style: .grouped)
-        
-        title = "Channels"
+        title = "Channels".bundleLocale()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -74,7 +82,9 @@ class ChannelsViewController: UITableViewController {
         
         clearsSelectionOnViewWillAppear = true
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: channelCellIdentifier)
-        channelListener = channelReference.addSnapshotListener { querySnapshot, error in
+        channelListener = channelReference
+            .whereField("user", arrayContains: currentUser.chatId)
+            .addSnapshotListener { querySnapshot, error in
             guard let snapshot = querySnapshot else {
                 print("Error listening for channel updates: \(error?.localizedDescription ?? "No error")")
                 return

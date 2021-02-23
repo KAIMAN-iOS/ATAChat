@@ -62,15 +62,15 @@ struct Message: MessageKit.MessageType {
     var image: UIImage? = nil
     var downloadURL: URL? = nil
     
-    init(user: User, content: String) {
-        sender = Sender(senderId: user.uid, displayName: user.displayName ?? "")
+    init(user: ChatUser, content: String) {
+        sender = Sender(senderId: user.chatId, displayName: user.displayName)
         self.content = content
         sentDate = Date()
         id = nil
     }
     
-    init(user: User, image: UIImage) {
-        sender = Sender(senderId: user.uid, displayName: user.displayName ?? "")
+    init(user: ChatUser, image: UIImage) {
+        sender = Sender(senderId: user.chatId, displayName: user.displayName)
         self.image = image
         content = ""
         sentDate = Date()

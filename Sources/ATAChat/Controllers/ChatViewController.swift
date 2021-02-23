@@ -34,6 +34,7 @@ import FirebaseFirestore
 import InputBarAccessoryView
 import ATAConfiguration
 
+
 final class ChatViewController: MessagesViewController {
     var conf: ATAConfiguration!
     
@@ -52,14 +53,14 @@ final class ChatViewController: MessagesViewController {
     private let storage = Storage.storage().reference()
     private var messages: [Message] = []
     private var messageListener: ListenerRegistration?
-    private let user: User
+    private let user: ChatUser
     private let channel: Channel
     
     deinit {
         messageListener?.remove()
     }
     
-    init(user: User, channel: Channel) {
+    init(user: ChatUser, channel: Channel) {
         self.user = user
         self.channel = channel
         super.init(nibName: nil, bundle: nil)
@@ -312,7 +313,7 @@ extension ChatViewController: MessagesDataSource {
         1
     }
     func currentSender() -> SenderType {
-        return Sender(senderId: user.uid, displayName: user.displayName ?? "")
+        return Sender(senderId: user.chatId, displayName: user.displayName)
     }
     
     func numberOfMessages(in messagesCollectionView: MessagesCollectionView) -> Int {
@@ -341,7 +342,7 @@ extension ChatViewController: MessagesDataSource {
 extension ChatViewController: InputBarAccessoryViewDelegate {
     
     func messageInputBar(_ inputBar: InputBarAccessoryView, didPressSendButtonWith text: String) {
-        let message = Message(user: user, content: text)s
+        let message = Message(user: user, content: text)
         save(message)
         inputBar.inputTextView.text = ""
     }
