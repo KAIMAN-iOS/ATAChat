@@ -32,7 +32,7 @@ import FirebaseAuth
 import ATAConfiguration
 import Ampersand
 
-protocol ChatUser {
+public protocol ChatUser {
     var chatId: String { get }
     var displayName: String { get }
 }
@@ -43,7 +43,7 @@ protocol Channelable {
 }
 
 class ChannelsViewController: UITableViewController {
-    var conf: ATAConfiguration!
+    static var conf: ATAConfiguration!
     private let toolbarLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
@@ -59,7 +59,7 @@ class ChannelsViewController: UITableViewController {
         return db.collection("group")
     }
     private var channelListener: ListenerRegistration?
-    
+
     private var channels = [Channel]()
     private let currentUser: ChatUser
     

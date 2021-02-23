@@ -9,13 +9,14 @@ import UIKit
 import KCoordinatorKit
 import ATAConfiguration
 
-class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
+public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
     var channelController: ChannelsViewController!
-    init(router: RouterType, currentUser: ChatUser, conf: ATAConfiguration) {
+    public init(router: RouterType, currentUser: ChatUser, conf: ATAConfiguration) {
         super.init(router: router)
         channelController = ChannelsViewController(currentUser: currentUser)
+        ChannelsViewController.conf = conf
     }
-    override func toPresentable() -> UIViewController { channelController }
+    public override func toPresentable() -> UIViewController { channelController }
 }
 
 extension String {

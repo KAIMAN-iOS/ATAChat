@@ -80,22 +80,18 @@ struct Message: MessageKit.MessageType {
     init?(document: QueryDocumentSnapshot) {
         let data = document.data()
         
-        guard let sentDate = data["created"] as? Date else {
+        guard let sentDate = data["sentAt"] as? Timestamp else {
             return nil
         }
-        guard let senderID = data["senderID"] as? String else {
-            return nil
-        }
-        guard let senderName = data["senderName"] as? String else {
+        guard let senderID = data["sentBy"] as? String else {
             return nil
         }
         
         id = document.documentID
+        self.sentDate = sentDate.dateValue()
+        sender = Sender(senderId: senderID, displayName: data["senderName"] as? String ?? "unknown")
         
-        self.sentDate = sentDate
-        sender = Sender(senderId: senderID, displayName: senderName)
-        
-        if let content = data["content"] as? String {
+        if let content = data["text"] as? String {
             self.content = content
             downloadURL = nil
         } else if let urlString = data["url"] as? String, let url = URL(string: urlString) {
@@ -112,15 +108,15 @@ extension Message: DatabaseRepresentation {
     
     var representation: [String : Any] {
         var rep: [String : Any] = [
-            "created": sentDate,
-            "senderID": sender.senderId,
+            "sentAt": sentDate,
+            "sentBy": sender.senderId,
             "senderName": sender.displayName
         ]
         
         if let url = downloadURL {
             rep["url"] = url.absoluteString
         } else {
-            rep["content"] = content
+            rep["text"] = content
         }
         
         return rep

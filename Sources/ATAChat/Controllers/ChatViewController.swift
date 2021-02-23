@@ -36,7 +36,7 @@ import ATAConfiguration
 
 
 final class ChatViewController: MessagesViewController {
-    var conf: ATAConfiguration!
+    var conf: ATAConfiguration = ChannelsViewController.conf
     
     private var isSendingPhoto = false {
         didSet {
@@ -64,7 +64,6 @@ final class ChatViewController: MessagesViewController {
         self.user = user
         self.channel = channel
         super.init(nibName: nil, bundle: nil)
-        
         title = channel.name
     }
     
@@ -80,8 +79,7 @@ final class ChatViewController: MessagesViewController {
             return
         }
         
-        reference = db.collection(["channels", id, "thread"].joined(separator: "/"))
-        
+        reference = db.collection(["messages", id, "messages"].joined(separator: "/"))
         messageListener = reference?.addSnapshotListener { querySnapshot, error in
             guard let snapshot = querySnapshot else {
                 print("Error listening for channel updates: \(error?.localizedDescription ?? "No error")")
@@ -162,7 +160,7 @@ final class ChatViewController: MessagesViewController {
         
         if shouldScrollToBottom {
             DispatchQueue.main.async {
-                self.messagesCollectionView.scrollToLastItem(animated: true)
+                self.messagesCollectionView.scrollToLastItem()
             }
         }
     }
@@ -185,6 +183,7 @@ final class ChatViewController: MessagesViewController {
                     
                     message.image = image
                     self.insertNewMessage(message)
+                    self.messagesCollectionView.scrollToLastItem()
                 }
             } else {
                 insertNewMessage(message)
@@ -227,10 +226,8 @@ final class ChatViewController: MessagesViewController {
     
     // MARK: - GET DOWNLOAD URL
     private func getDownloadURL(from path: String, completion: @escaping (URL?, Error?) -> Void) {
-        
         self.storage.child(path).downloadURL(completion: completion)
     }
-    
     
     private func sendPhoto(_ image: UIImage) {
         isSendingPhoto = true
@@ -265,12 +262,14 @@ final class ChatViewController: MessagesViewController {
             completion(UIImage(data: imageData))
         }
     }
-    
 }
 
 // MARK: - MessagesDisplayDelegate
 
 extension ChatViewController: MessagesDisplayDelegate {
+    func textColor(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> UIColor {
+        conf.palette.textOnPrimary
+    }
     
     func backgroundColor(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> UIColor {
         return isFromCurrentSender(message: message) ? conf.palette.primary : conf.palette.secondary
@@ -300,7 +299,6 @@ extension ChatViewController: MessagesLayoutDelegate {
     }
     
     func heightForLocation(message: MessageType, at indexPath: IndexPath, with maxWidth: CGFloat, in messagesCollectionView: MessagesCollectionView) -> CGFloat {
-        
         return 0
     }
     
@@ -310,14 +308,10 @@ extension ChatViewController: MessagesLayoutDelegate {
 
 extension ChatViewController: MessagesDataSource {
     func numberOfSections(in messagesCollectionView: MessagesCollectionView) -> Int {
-        1
+        return messages.count
     }
     func currentSender() -> SenderType {
         return Sender(senderId: user.chatId, displayName: user.displayName)
-    }
-    
-    func numberOfMessages(in messagesCollectionView: MessagesCollectionView) -> Int {
-        return messages.count
     }
     
     func messageForItem(at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> MessageType {
@@ -330,7 +324,7 @@ extension ChatViewController: MessagesDataSource {
             string: name,
             attributes: [
                 .font: UIFont.preferredFont(forTextStyle: .caption1),
-                .foregroundColor: UIColor(white: 0.3, alpha: 1)
+                .foregroundColor: conf.palette.textOnPrimary
             ]
         )
     }
@@ -340,8 +334,7 @@ extension ChatViewController: MessagesDataSource {
 // MARK: - MessageInputBarDelegate
 
 extension ChatViewController: InputBarAccessoryViewDelegate {
-    
-    func messageInputBar(_ inputBar: InputBarAccessoryView, didPressSendButtonWith text: String) {
+    func inputBar(_ inputBar: InputBarAccessoryView, didPressSendButtonWith text: String) {
         let message = Message(user: user, content: text)
         save(message)
         inputBar.inputTextView.text = ""
