@@ -26,6 +26,7 @@ let package = Package(
         .package(url: "https://github.com/jerometonnelier/ActionButton", .branch("master")),
         .package(url: "https://github.com/jerometonnelier/ATAConfiguration", .branch("master")),
         .package(url: "https://github.com/MessageKit/MessageKit", from: "3.5.0"),
+        .package(url: "https://github.com/malcommac/SwiftDate", from: "6.3.1"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -39,6 +40,7 @@ let package = Package(
                            "KCoordinatorKit",
                            "ActionButton",
                            "ATAConfiguration",
-                           "MessageKit"])
+                           "MessageKit",
+                           "SwiftDate"])
     ]
 )

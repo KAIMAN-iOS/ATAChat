@@ -33,7 +33,12 @@ import MessageKit
 import FirebaseFirestore
 import InputBarAccessoryView
 import ATAConfiguration
-
+import DateExtension
+import NSAttributedStringBuilder
+import SwiftDate
+import StringExtension
+import ColorExtension
+import UIViewControllerExtension
 
 final class ChatViewController: MessagesViewController {
     var conf: ATAConfiguration = ChannelsViewController.conf
@@ -48,6 +53,11 @@ final class ChatViewController: MessagesViewController {
         }
     }
     
+    private let formatter: DateFormatter = {
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            return formatter
+        }()
     private let db = Firestore.firestore()
     private var reference: CollectionReference?
     private let storage = Storage.storage().reference()
@@ -55,6 +65,15 @@ final class ChatViewController: MessagesViewController {
     private var messageListener: ListenerRegistration?
     private let user: ChatUser
     private let channel: Channel
+    public var showAvatars: Bool = true  {
+        didSet {
+            guard messagesCollectionView != nil, showAvatars == false else { return }
+            if let layout = messagesCollectionView.collectionViewLayout as? MessagesCollectionViewFlowLayout {
+              layout.setMessageIncomingAvatarSize(.zero)
+              layout.setMessageOutgoingAvatarSize(.zero)
+            }
+        }
+    }
     
     deinit {
         messageListener?.remove()
@@ -73,6 +92,12 @@ final class ChatViewController: MessagesViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        hideBackButtonText = true
+        messageInputBar.sendButton.configure {
+            $0.image = UIImage(systemName: "arrow.up.circle.fill", withConfiguration: UIImage.SymbolConfiguration.init(scale: .large))
+            $0.title = nil
+//            $0.setSize(CGSize(width: 50, height: 50), animated: false)
+        }
         
         guard let id = channel.id else {
             navigationController?.popViewController(animated: true)
@@ -96,7 +121,7 @@ final class ChatViewController: MessagesViewController {
         maintainPositionOnKeyboardFrameChanged = true
         messageInputBar.inputTextView.tintColor = conf.palette.primary
         messageInputBar.sendButton.setTitleColor(conf.palette.primary, for: .normal)
-        
+        showMessageTimestampOnSwipeLeft = true
         messageInputBar.delegate = self
         messagesCollectionView.messagesDataSource = self
         messagesCollectionView.messagesLayoutDelegate = self
@@ -115,21 +140,18 @@ final class ChatViewController: MessagesViewController {
         messageInputBar.leftStackView.alignment = .center
         messageInputBar.setLeftStackViewWidthConstant(to: 50, animated: false)
         messageInputBar.setStackViewItems([cameraItem], forStack: .left, animated: false) // 3
+        
+        guard showAvatars == false else { return }
+        if let layout = messagesCollectionView.collectionViewLayout as? MessagesCollectionViewFlowLayout {
+          layout.setMessageIncomingAvatarSize(.zero)
+          layout.setMessageOutgoingAvatarSize(.zero)
+        }
     }
     
     // MARK: - Actions
     
     @objc private func cameraButtonPressed() {
-        let picker = UIImagePickerController()
-        picker.delegate = self
-        
-        if UIImagePickerController.isSourceTypeAvailable(.camera) {
-            picker.sourceType = .camera
-        } else {
-            picker.sourceType = .photoLibrary
-        }
-        
-        present(picker, animated: true, completion: nil)
+        presentImagePickerChoice(delegate: self, tintColor: conf.palette.primary)
     }
     
     // MARK: - Helpers
@@ -281,7 +303,7 @@ extension ChatViewController: MessagesDisplayDelegate {
     
     func messageStyle(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> MessageStyle {
         let corner: MessageStyle.TailCorner = isFromCurrentSender(message: message) ? .bottomRight : .bottomLeft
-        return .bubbleTail(corner, .curved)
+        return .bubbleTail(corner, .pointedEdge)
     }
     
 }
@@ -319,16 +341,96 @@ extension ChatViewController: MessagesDataSource {
     }
     
     func cellTopLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
-        let name = message.sender.displayName
-        return NSAttributedString(
-            string: name,
-            attributes: [
-                .font: UIFont.preferredFont(forTextStyle: .caption1),
-                .foregroundColor: conf.palette.textOnPrimary
-            ]
-        )
+        let date = message.sentDate
+        guard let strDate: String = (date.isToday || date.isYesterday) ? DateFormatter.relativeDayFormatter.string(for: date)?.capitalized : DateFormatter.readableDateFormatter.string(for: date) else { return nil }
+        return NSAttributedString{
+            AText(strDate)
+                .font(.applicationFont(forTextStyle: .caption1))
+                .foregroundColor(conf.palette.secondaryTexts)
+        }
     }
     
+    func detectorAttributes(for detector: DetectorType, and message: MessageType, at indexPath: IndexPath) -> [NSAttributedString.Key: Any] {
+        switch detector {
+        case .hashtag, .mention: return [.foregroundColor: UIColor.blue]
+        default: return MessageLabel.defaultAttributes
+        }
+    }
+    
+    func enabledDetectors(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> [DetectorType] {
+        return [.url, .address, .phoneNumber, .date, .transitInformation, .mention, .hashtag]
+    }
+    
+    func messageBottomLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
+        let date = message.sentDate
+        guard let dateString = date.isToday ? DateFormatter.relativeDateFormatter.string(for: date) : DateFormatter.timeOnlyFormatter.string(for: date) else { return nil }
+        return NSAttributedString {
+            AText(dateString)
+                .font(.applicationFont(forTextStyle: .caption2))
+                .foregroundColor(conf.palette.inactive)
+        }
+    }
+    
+    func cellTopLabelHeight(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> CGFloat {
+        // display only when the date changes
+        guard indexPath.section > 0 else { return 18 }
+        let previousDate = messages[indexPath.section - 1].sentDate
+        return previousDate.isInside(date: message.sentDate, granularity: .day) ? 0 : 18
+    }
+    
+    func messageTopLabelHeight(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> CGFloat {
+        // display only if there are more than 2 people in the channel
+        guard channel.users.count > 2, indexPath.section > 0 else { return 0 }
+        return 20
+    }
+    
+    func messageBottomLabelHeight(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> CGFloat {
+        return 16
+    }
+
+    func configureAvatarView(_ avatarView: AvatarView, for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) {
+        avatarView.isHidden = showAvatars == false
+//        let avatar = SampleData.shared.getAvatarFor(sender: message.sender)
+        avatarView.set(avatar: Avatar(image: nil,
+                                      initials: message
+                                        .sender
+                                        .displayName
+                                        .uppercased()
+                                        .components(separatedBy: " ")
+                                        .reduce("") { ($0 == "" ? "" : "\($0.first!)") + "\($1.first!)" }))
+        avatarView.backgroundColor = conf.palette.inactive
+        avatarView.placeholderTextColor = conf.palette.textOnPrimary
+    }
+    
+    
+//    func cellBottomLabelHeight(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> CGFloat {
+//        return 17
+//    }
+    
+//    func cellTopLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
+//        if indexPath.section % 3 == 0 {
+//            return NSAttributedString(string: MessageKitDateFormatter.shared.string(from: message.sentDate), attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 10), NSAttributedString.Key.foregroundColor: UIColor.darkGray])
+//        }
+//        return nil
+//    }
+
+//    func cellBottomLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
+//        return NSAttributedString(string: "Read", attributes: [NSAttributedString.Key.font: UIFont.boldSystemFont(ofSize: 10), NSAttributedString.Key.foregroundColor: UIColor.darkGray])
+//    }
+
+    func messageTopLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
+        NSAttributedString{
+            AText(message.sender.displayName)
+                .font(.applicationFont(forTextStyle: .caption1))
+                .foregroundColor(conf.palette.mainTexts)
+        }
+    }    
+}
+
+extension Sender {
+    var color: UIColor {
+        return UIColor(hexString: "\(displayName.hash)", defaultReturn: ChannelsViewController.conf.palette.secondary)
+    }
 }
 
 // MARK: - MessageInputBarDelegate

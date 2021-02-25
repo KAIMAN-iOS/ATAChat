@@ -31,6 +31,7 @@ import FirebaseFirestore
 import FirebaseAuth
 import ATAConfiguration
 import Ampersand
+import UIViewControllerExtension
 
 public protocol ChatUser {
     var chatId: String { get }
@@ -79,7 +80,7 @@ class ChannelsViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        hideBackButtonText = true
         clearsSelectionOnViewWillAppear = true
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: channelCellIdentifier)
         channelListener = channelReference
