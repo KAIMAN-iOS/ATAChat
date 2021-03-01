@@ -74,6 +74,7 @@ final class ChatViewController: MessagesViewController {
             }
         }
     }
+    var avatars: [String: UIImage] = [:]
     
     deinit {
         messageListener?.remove()
@@ -90,8 +91,24 @@ final class ChatViewController: MessagesViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
+    func downloadAvatars() {
+        self.avatars.removeAll()
+        channel.users.forEach { [weak self] userId in
+            guard let self = self else { return }
+            self.db.collection("user").document(userId).getDocument(completion: { (snap, error) in
+                let data = snap?.data()
+                if let url = URL(string: data?["avatarUrl"] as? String ?? ""),
+                   let data = try? Data(contentsOf: url) {
+                    self.avatars[userId] = UIImage(data: data)
+                }
+                self.messagesCollectionView.reloadData()
+            })
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        downloadAvatars()
         hideBackButtonText = true
         messageInputBar.sendButton.configure {
             $0.image = UIImage(systemName: "arrow.up.circle.fill", withConfiguration: UIImage.SymbolConfiguration.init(scale: .large))
@@ -302,6 +319,7 @@ extension ChatViewController: MessagesDisplayDelegate {
     }
     
     func messageStyle(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> MessageStyle {
+//        guard indexPath.section == messages.count - 1 else { return .bubble }
         let corner: MessageStyle.TailCorner = isFromCurrentSender(message: message) ? .bottomRight : .bottomLeft
         return .bubbleTail(corner, .pointedEdge)
     }
@@ -391,7 +409,7 @@ extension ChatViewController: MessagesDataSource {
     func configureAvatarView(_ avatarView: AvatarView, for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) {
         avatarView.isHidden = showAvatars == false
 //        let avatar = SampleData.shared.getAvatarFor(sender: message.sender)
-        avatarView.set(avatar: Avatar(image: nil,
+        avatarView.set(avatar: Avatar(image: avatars[message.sender.senderId],
                                       initials: message
                                         .sender
                                         .displayName

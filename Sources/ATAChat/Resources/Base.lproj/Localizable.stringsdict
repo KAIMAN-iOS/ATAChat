@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NumberOfMember</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@NbMember@</string>
+		<key>NbMember</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>1 membre actif</string>
+			<key>zero</key>
+			<string>Aucun membre actif</string>
+			<key>other</key>
+			<string>%d membres actifs</string>
+		</dict>
+	</dict>
+	<key>NumberOfInvitation</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@NbInvitation@</string>
+		<key>NbInvitation</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>one</key>
+			<string>1 invitation en attente</string>
+			<key>zero</key>
+			<string>Aucune invitation en attente</string>
+			<key>other</key>
+			<string>%d invitations en attente</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

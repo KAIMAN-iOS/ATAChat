@@ -37,6 +37,11 @@ struct Sender: SenderType {
     var displayName: String
 }
 
+struct AvatarDisplay {
+    var senderId: String
+    var avatarUrl: URL?
+}
+
 extension CodableImage: MediaItem {
     public var url: URL? { self.imageURL }
     public var placeholderImage: UIImage { UIImage(named: "")!}

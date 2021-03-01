@@ -32,6 +32,12 @@ struct Channel {
     let id: String?
     let name: String
     let users: [String]
+    var unreadCount: Int = 0
+    var isAlertGroup: Bool = false
+    
+    mutating func update(_ unread: Int) {
+        unreadCount = unread
+    }
     
     init(name: String) {
         id = nil

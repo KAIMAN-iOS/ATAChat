@@ -32,6 +32,14 @@ import FirebaseAuth
 import ATAConfiguration
 import Ampersand
 import UIViewControllerExtension
+import SnapKit
+import LabelExtension
+import TableViewExtension
+
+public protocol AlertGroupable {
+    var isAlertGroup: Bool { get }
+    var groupId: String { get }
+}
 
 public protocol ChatUser {
     var chatId: String { get }
@@ -44,6 +52,32 @@ protocol Channelable {
 }
 
 class ChannelsViewController: UITableViewController {
+    enum CellType: Equatable, Comparable {
+        static func == (lhs: CellType, rhs: CellType) -> Bool {
+            switch (lhs, rhs) {
+            case (.alert, .alert): return true
+            case (.default, .default): return true
+            default: return false
+            }
+        }
+        static func < (lhs: CellType, rhs: CellType) -> Bool {
+            switch (lhs, rhs) {
+            case (.alert, .default): return true
+            default: return false
+            }
+        }
+        
+        case alert(_: [Channel])
+        case `default`(_: [Channel])
+        
+        var channels: [Channel] {
+            switch self {
+            case .alert(let channels): return channels
+            case .default(let channels): return channels
+            }
+        }
+    }
+    var cellTypes: [CellType] = []
     static var conf: ATAConfiguration!
     private let toolbarLabel: UILabel = {
         let label = UILabel()
@@ -54,24 +88,21 @@ class ChannelsViewController: UITableViewController {
     
     private let channelCellIdentifier = "channelCell"
     private var currentChannelAlertController: UIAlertController?
-    
     private let db = Firestore.firestore()
-    private var channelReference: CollectionReference {
-        return db.collection("group")
-    }
+    private var channelReference: CollectionReference { db.collection("group") }
     private var channelListener: ListenerRegistration?
-
     private var channels = [Channel]()
     private let currentUser: ChatUser
+    private let groups: [AlertGroupable]
     
     deinit {
         channelListener?.remove()
     }
     
-    init(currentUser: ChatUser) {
+    init(currentUser: ChatUser, groups: [AlertGroupable]) {
         self.currentUser = currentUser
+        self.groups = groups
         super.init(style: .grouped)
-        title = "Channels".bundleLocale()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -80,7 +111,13 @@ class ChannelsViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        title = "Channels".bundleLocale()
+        view.backgroundColor = .white
+        tableView.backgroundColor = .white
+        tableView.separatorStyle = .none
         hideBackButtonText = true
+        navigationController?.navigationBar.prefersLargeTitles = true
+        ChatReadStateController.shared.startListenning(for: currentUser.chatId)
         clearsSelectionOnViewWillAppear = true
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: channelCellIdentifier)
         channelListener = channelReference
@@ -115,42 +152,69 @@ class ChannelsViewController: UITableViewController {
         }
     }
     
+    func cellType(for channel: Channel) -> CellType {
+        var cellType: CellType? = cellTypes.filter({ $0 == (channel.isAlertGroup ? CellType.alert([]) : CellType.default([])) }).first
+        if cellType == nil {
+            cellType = channel.isAlertGroup ? CellType.alert([]) : CellType.default([])
+        }
+        return cellType!
+    }
+    
+    func update(_ cellType: CellType, with channels: [Channel]) {
+        switch cellType {
+        case .alert:
+            cellTypes.removeAll(where: { $0 == CellType.alert([]) })
+            cellTypes.append(CellType.alert(channels.sorted()))
+            
+        case .default:
+            cellTypes.removeAll(where: { $0 == CellType.default([]) })
+            cellTypes.append(CellType.default(channels.sorted()))
+        }
+        cellTypes.sort()
+    }
+    
     private func addChannelToTable(_ channel: Channel) {
+        let cellType = self.cellType(for: channel)
+        var channels = cellType.channels
         guard !channels.contains(channel) else {
             return
         }
-        
         channels.append(channel)
-        channels.sort()
+        update(cellType, with: channels)
         
         guard let index = channels.firstIndex(of: channel) else {
             return
         }
-        tableView.insertRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
+        tableView.reloadData()
     }
     
     private func updateChannelInTable(_ channel: Channel) {
+        let cellType = self.cellType(for: channel)
+        var channels = cellType.channels
         guard let index = channels.firstIndex(of: channel) else {
             return
         }
-        
         channels[index] = channel
-        tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
+        update(cellType, with: channels)
+        tableView.reloadRows(at: [IndexPath(row: index, section: cellTypes.firstIndex(of: cellType) ?? 0)], with: .automatic)
     }
     
     private func removeChannelFromTable(_ channel: Channel) {
+        let cellType = self.cellType(for: channel)
+        var channels = cellType.channels
         guard let index = channels.firstIndex(of: channel) else {
             return
         }
-        
         channels.remove(at: index)
-        tableView.deleteRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
+        update(cellType, with: channels)
+        tableView.deleteRows(at: [IndexPath(row: index, section: cellTypes.firstIndex(of: cellType) ?? 0)], with: .automatic)
     }
     
     private func handleDocumentChange(_ change: DocumentChange) {
-        guard let channel = Channel(document: change.document) else {
+        guard var channel = Channel(document: change.document) else {
             return
         }
+        channel.isAlertGroup = groups.compactMap({ $0.groupId }).contains(channel.id)
         
         switch change.type {
         case .added:
@@ -168,31 +232,60 @@ class ChannelsViewController: UITableViewController {
 // MARK: - TableViewDelegate
 
 extension ChannelsViewController {
-    
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
+        return cellTypes.count
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return channels.count
+        return cellTypes[section].channels.count
     }
     
     override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 55
     }
     
+    override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        guard let index = cellTypes.firstIndex(of: .alert([])), section == index else { return 0 }
+        return 44
+    }
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: channelCellIdentifier, for: indexPath)
-        
         cell.accessoryType = .disclosureIndicator
-        cell.textLabel?.text = channels[indexPath.row].name
-        
+        cell.textLabel?.set(text: cellTypes[indexPath.section].channels[indexPath.row].name,
+                            for: .body,
+                            textColor: ChannelsViewController.conf.palette.mainTexts)
+        cell.textLabel?.font = .applicationFont(forTextStyle: .callout)
+        cell.addDefaultSelectedBackground(ChannelsViewController.conf.palette.primary.withAlphaComponent(0.3))
         return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let channel = channels[indexPath.row]
+        let channel = cellTypes[indexPath.section].channels[indexPath.row]
         let vc = ChatViewController(user: currentUser, channel: channel)
         navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard let index = cellTypes.firstIndex(of: .alert([])), section == index else { return nil }
+        let view = UIView()
+        let label = UILabel()
+        label.set(text: "Alert".bundleLocale().uppercased(), for: .subheadline, textColor: ChannelsViewController.conf.palette.mainTexts)
+        view.addSubview(label)
+        label.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(20)
+            make.top.equalToSuperview().offset(12)
+            make.bottom.equalToSuperview().offset(8)
+            make.trailingMargin.equalToSuperview()
+        }
+        return view
+    }
+}
+
+extension ChannelsViewController: ChatReadStateDelegate {
+    func didupdate(readCount: Int, for channelId: String) {
+        guard var channel = channels.filter({ $0.id == channelId }).first else { return }
+        channel.update(readCount)
+        updateChannelInTable(channel)
     }
 }
