@@ -38,6 +38,7 @@ let package = Package(
                            .product(name: "FirebaseFirestore", package: "Firebase"),
                            .product(name: "FirebaseStorage", package: "Firebase"),
                            .product(name: "FirebaseDatabase", package: "Firebase"),
+                           .product(name: "FirebaseMessaging", package: "Firebase"),
                            "KCoordinatorKit",
                            "ActionButton",
                            "ATAConfiguration",

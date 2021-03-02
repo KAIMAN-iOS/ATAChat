@@ -46,7 +46,8 @@ open class BadgeController {
               borderColor: UIColor = .black,
               animation: BadgeAnimation? = BadgeAnimations.defaultAnimation,
               badgeHeight: CGFloat? = nil,
-              animateOnlyWhenBadgeIsNotYetPresent: Bool = false) {
+              animateOnlyWhenBadgeIsNotYetPresent: Bool = false,
+              initialValue: Int = 0) {
 
     self.view = view
     self.centerPosition = centerPosition
@@ -68,6 +69,7 @@ open class BadgeController {
     } else {
       self.badgeTextFont = UIFont.systemFont(ofSize: CGFloat(self.badgeHeight) * 23 / 32)
     }
+    counter = initialValue
   }
 
   // MARK: Public methods

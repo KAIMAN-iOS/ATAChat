@@ -118,7 +118,6 @@ class ChannelsViewController: UITableViewController {
         tableView.separatorStyle = .none
         hideBackButtonText = true
         navigationController?.navigationBar.prefersLargeTitles = true
-        ChatReadStateController.shared.startListenning(for: currentUser.chatId, delegate: self)
         clearsSelectionOnViewWillAppear = true
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: channelCellIdentifier)
         channelListener = channelReference
@@ -133,6 +132,7 @@ class ChannelsViewController: UITableViewController {
                 self.handleDocumentChange(change)
             }
         }
+        ChatReadStateController.shared.startListenning(for: currentUser.chatId, delegate: self)
     }
     
     // MARK: - Helpers
@@ -216,6 +216,7 @@ class ChannelsViewController: UITableViewController {
             return
         }
         channel.isAlertGroup = groups.compactMap({ $0.groupId }).contains(channel.id)
+        channel.unreadCount = ChatReadStateController.shared.getUnreadCount(channelId: channel.id ?? "") ?? 0
         
         switch change.type {
         case .added:
@@ -252,12 +253,18 @@ extension ChannelsViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: channelCellIdentifier, for: indexPath)
+        let channel = cellTypes[indexPath.section].channels[indexPath.row]
         cell.accessoryType = .disclosureIndicator
-        cell.textLabel?.set(text: cellTypes[indexPath.section].channels[indexPath.row].name,
+        cell.textLabel?.set(text: channel.name,
                             for: .body,
                             textColor: ChannelsViewController.conf.palette.mainTexts)
         cell.textLabel?.font = .applicationFont(forTextStyle: .callout)
         cell.addDefaultSelectedBackground(ChannelsViewController.conf.palette.primary.withAlphaComponent(0.3))
+        
+        if channel.unreadCount > 0 {
+            let badge = BadgeController(for: cell.textLabel!, initialValue: channel.unreadCount)
+            badge.addOrReplaceCurrent(animated: true)
+        }
         return cell
     }
     
