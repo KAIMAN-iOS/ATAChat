@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import FirebaseFirestore
+import FirebaseDatabase
 
 protocol ChatReadStateDelegate: NSObjectProtocol {
     func didupdate(readCount: Int, for channelId: String)
@@ -14,11 +14,8 @@ protocol ChatReadStateDelegate: NSObjectProtocol {
 
 class ChatReadStateController {
     static let shared: ChatReadStateController = ChatReadStateController()
-    private let db = Firestore.firestore()
-    private var channelReference: CollectionReference {
-        return db.collection("unreadCount")
-    }
-    private var channelListener: ListenerRegistration?
+    private let db = Database.database(url: "https://ata-chauffeur-app-default-rtdb.europe-west1.firebasedatabase.app").reference()
+    private var handle: DatabaseHandle?
     private init() {}
     private var delegates: [ChatReadStateDelegate] = []
     
@@ -29,32 +26,19 @@ class ChatReadStateController {
         delegates.removeAll(where: { $0 === delegate})
     }
     
-    public func startListenning(for chatId: String) {
-        channelListener = db.collection(["unreadCount", chatId, "groups"].joined(separator: "/"))
-            //        channelListener = channelReference
-            .addSnapshotListener(includeMetadataChanges: true) { querySnapshot, error in
-                guard let snapshot = querySnapshot else {
-                    print("Error listening for channel updates: \(error?.localizedDescription ?? "No error")")
-                    return
-                }
-                
-                snapshot.documents.forEach { [weak self] doc in
-                    let data = doc.data()
-                    guard let groupId = data["groupId"] as? String,
-                          let count = data["unreadCount"] as? Int else {
-                        return
-                    }
-                    self?.delegates.forEach({ $0.didupdate(readCount: count, for: groupId) })
-                }
-            }
+    public func startListenning(for chatId: String, delegate: ChatReadStateDelegate) {
+        addDelegate(delegate)
+        handle = db.child("messages").child(chatId).observe(DataEventType.value) { snap in
+            let postDict = snap.value as? [String : AnyObject] ?? [:]
+            print(postDict)
+        }
     }
     
     func getUnreadCount(for userId: String, channelId: String, completion: @escaping ((Int) -> Void)) {
-//        db.collection(["unreadCount", userId, "groups"].joined(separator: "/"))
+
     }
     
     public func stopListenning() {
-        channelListener?.remove()
-        channelListener = nil
+        handle = nil
     }
 }

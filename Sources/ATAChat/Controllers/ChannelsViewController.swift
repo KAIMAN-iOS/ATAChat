@@ -89,7 +89,7 @@ class ChannelsViewController: UITableViewController {
     private let channelCellIdentifier = "channelCell"
     private var currentChannelAlertController: UIAlertController?
     private let db = Firestore.firestore()
-    private var channelReference: CollectionReference { db.collection("group") }
+    private var channelReference: CollectionReference { db.collection("messages") }
     private var channelListener: ListenerRegistration?
     private var channels = [Channel]()
     private let currentUser: ChatUser
@@ -97,6 +97,7 @@ class ChannelsViewController: UITableViewController {
     
     deinit {
         channelListener?.remove()
+        ChatReadStateController.shared.removeDelegate(self)
     }
     
     init(currentUser: ChatUser, groups: [AlertGroupable]) {
@@ -117,7 +118,7 @@ class ChannelsViewController: UITableViewController {
         tableView.separatorStyle = .none
         hideBackButtonText = true
         navigationController?.navigationBar.prefersLargeTitles = true
-        ChatReadStateController.shared.startListenning(for: currentUser.chatId)
+        ChatReadStateController.shared.startListenning(for: currentUser.chatId, delegate: self)
         clearsSelectionOnViewWillAppear = true
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: channelCellIdentifier)
         channelListener = channelReference
