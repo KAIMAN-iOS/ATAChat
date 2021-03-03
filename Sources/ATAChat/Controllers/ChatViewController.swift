@@ -106,9 +106,15 @@ final class ChatViewController: MessagesViewController {
         }
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        ChatReadStateController.shared.resetUnreadCount(for: user.chatId, channel: channel)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        downloadAvatars()
+        ChatReadStateController.shared.resetUnreadCount(for: user.chatId, channel: channel)
+        //downloadAvatars()
         hideBackButtonText = true
         messageInputBar.sendButton.configure {
             $0.image = UIImage(systemName: "arrow.up.circle.fill", withConfiguration: UIImage.SymbolConfiguration.init(scale: .large))

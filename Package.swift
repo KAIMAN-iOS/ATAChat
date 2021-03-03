@@ -27,6 +27,7 @@ let package = Package(
         .package(url: "https://github.com/jerometonnelier/ATAConfiguration", .branch("master")),
         .package(url: "https://github.com/MessageKit/MessageKit", from: "3.5.0"),
         .package(url: "https://github.com/malcommac/SwiftDate", from: "6.3.1"),
+        .package(url: "https://github.com/Minitour/EasyNotificationBadge", from: "1.2.5"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -43,6 +44,7 @@ let package = Package(
                            "ActionButton",
                            "ATAConfiguration",
                            "MessageKit",
-                           "SwiftDate"])
+                           "SwiftDate",
+                           "EasyNotificationBadge"])
     ]
 )

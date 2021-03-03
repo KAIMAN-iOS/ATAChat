@@ -35,9 +35,10 @@ import UIViewControllerExtension
 import SnapKit
 import LabelExtension
 import TableViewExtension
+import EasyNotificationBadge
 
 public protocol AlertGroupable {
-    var isAlertGroup: Bool { get }
+    var isAlertGroup: Bool { get }
     var groupId: String { get }
 }
 
@@ -91,13 +92,13 @@ class ChannelsViewController: UITableViewController {
     private let db = Firestore.firestore()
     private var channelReference: CollectionReference { db.collection("messages") }
     private var channelListener: ListenerRegistration?
-    private var channels = [Channel]()
+//    private var channels = [Channel]()
     private let currentUser: ChatUser
     private let groups: [AlertGroupable]
     
     deinit {
         channelListener?.remove()
-        ChatReadStateController.shared.removeDelegate(self)
+        ChatReadStateController.shared.stopListenning(from: self)
     }
     
     init(currentUser: ChatUser, groups: [AlertGroupable]) {
@@ -183,7 +184,7 @@ class ChannelsViewController: UITableViewController {
         channels.append(channel)
         update(cellType, with: channels)
         
-        guard let index = channels.firstIndex(of: channel) else {
+        guard channels.firstIndex(of: channel) != nil else {
             return
         }
         tableView.reloadData()
@@ -262,8 +263,11 @@ extension ChannelsViewController {
         cell.addDefaultSelectedBackground(ChannelsViewController.conf.palette.primary.withAlphaComponent(0.3))
         
         if channel.unreadCount > 0 {
-            let badge = BadgeController(for: cell.textLabel!, initialValue: channel.unreadCount)
-            badge.addOrReplaceCurrent(animated: true)
+            cell.imageView?.image = UIImage()
+            cell.imageView?.badge(text: "\(channel.unreadCount)", appearance: BadgeAppearance(font: .applicationFont(forTextStyle: .caption1),
+                                                                                   backgroundColor: ChannelsViewController.conf.palette.primary,
+                                                                                   textColor: ChannelsViewController.conf.palette.textOnPrimary,
+                                                                                   animate: true))
         }
         return cell
     }
@@ -292,7 +296,7 @@ extension ChannelsViewController {
 
 extension ChannelsViewController: ChatReadStateDelegate {
     func didupdate(readCount: Int, for channelId: String) {
-        guard var channel = channels.filter({ $0.id == channelId }).first else { return }
+        guard var channel = cellTypes.flatMap({ $0.channels }).filter({ $0.id == channelId }).first else { return }
         channel.update(readCount)
         updateChannelInTable(channel)
     }

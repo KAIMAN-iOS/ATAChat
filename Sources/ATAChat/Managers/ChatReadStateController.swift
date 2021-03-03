@@ -20,16 +20,18 @@ class ChatReadStateController {
     private var delegates: [ChatReadStateDelegate] = []
     private var unreadCount: [String: Int] = [:]
     
-    public func addDelegate(_ delegate: ChatReadStateDelegate) {
+    private func addDelegate(_ delegate: ChatReadStateDelegate) {
         guard delegates.contains(where: { $0 === delegate }) == false else { return }
         delegates.append(delegate)
     }
-    public func removeDelegate(_ delegate: ChatReadStateDelegate) {
+    private func removeDelegate(_ delegate: ChatReadStateDelegate) {
         delegates.removeAll(where: { $0 === delegate})
     }
     
     public func startListenning(for chatId: String, delegate: ChatReadStateDelegate) {
         addDelegate(delegate)
+        guard handle == nil else { return }
+        
         handle = db.child("messages").child(chatId).observe(DataEventType.value) { snap in
             let postDict = snap.value as? [String : AnyObject] ?? [:]
             print(postDict)
@@ -46,7 +48,15 @@ class ChatReadStateController {
     
     func getUnreadCount(channelId: String) -> Int? { unreadCount[channelId] }
     
-    public func stopListenning() {
-        handle = nil
+    public func stopListenning(from delegate: ChatReadStateDelegate) {
+        removeDelegate(delegate)
+        if delegates.count == 0 {
+            handle = nil
+        }
+    }
+    
+    func resetUnreadCount(for userId: String,  channel: Channel) {
+        guard let channelId = channel.id else { return }
+        db.child("messages/\(userId)/\(channelId)/value").setValue(0)
     }
 }
