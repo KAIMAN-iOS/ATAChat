@@ -28,14 +28,14 @@
 
 import FirebaseFirestore
 
-struct Channel {
+@objc class Channel: NSObject {
     let id: String?
     let name: String
     let users: [String]
     var unreadCount: Int = 0
     var isAlertGroup: Bool = false
     
-    mutating func update(_ unread: Int) {
+    func update(_ unread: Int) {
         unreadCount = unread
     }
     

@@ -79,6 +79,7 @@ class ChannelsViewController: UITableViewController {
         }
     }
     var cellTypes: [CellType] = []
+    @objc dynamic var channels: [Channel] = []
     static var conf: ATAConfiguration!
     private let toolbarLabel: UILabel = {
         let label = UILabel()
@@ -86,7 +87,7 @@ class ChannelsViewController: UITableViewController {
         label.font = .applicationFont(forTextStyle: .body)
         return label
     }()
-    
+    weak var coordinatorDelegate: ChatCoordinatorDelegate!
     private let channelCellIdentifier = "channelCell"
     private var currentChannelAlertController: UIAlertController?
     private let db = Firestore.firestore()
@@ -101,26 +102,26 @@ class ChannelsViewController: UITableViewController {
         ChatReadStateController.shared.stopListenning(from: self)
     }
     
-    init(currentUser: ChatUser, groups: [AlertGroupable]) {
+    init(currentUser: ChatUser,
+         groups: [AlertGroupable],
+         coordinatorDelegate: ChatCoordinatorDelegate) {
         self.currentUser = currentUser
         self.groups = groups
+        self.coordinatorDelegate = coordinatorDelegate
         super.init(style: .grouped)
+        view.backgroundColor = .white
+        tableView.backgroundColor = .white
+        tableView.separatorStyle = .none
+        clearsSelectionOnViewWillAppear = true
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: channelCellIdentifier)
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        title = "Channels".bundleLocale()
-        view.backgroundColor = .white
-        tableView.backgroundColor = .white
-        tableView.separatorStyle = .none
-        hideBackButtonText = true
-        navigationController?.navigationBar.prefersLargeTitles = true
-        clearsSelectionOnViewWillAppear = true
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: channelCellIdentifier)
+    func startListenning() {
+        guard channelListener == nil else { return }
         channelListener = channelReference
             .whereField("user", arrayContains: currentUser.chatId)
             .addSnapshotListener { querySnapshot, error in
@@ -136,24 +137,14 @@ class ChannelsViewController: UITableViewController {
         ChatReadStateController.shared.startListenning(for: currentUser.chatId, delegate: self)
     }
     
-    // MARK: - Helpers
-    private func createChannel() {
-        guard let ac = currentChannelAlertController else {
-            return
-        }
-        
-        guard let channelName = ac.textFields?.first?.text else {
-            return
-        }
-        
-        let channel = Channel(name: channelName)
-        channelReference.addDocument(data: channel.representation) { error in
-            if let e = error {
-                print("Error saving channel: \(e.localizedDescription)")
-            }
-        }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = "Channels".bundleLocale()
+        hideBackButtonText = true
+        navigationController?.navigationBar.prefersLargeTitles = true
     }
     
+    // MARK: - Helpers
     func cellType(for channel: Channel) -> CellType {
         var cellType: CellType? = cellTypes.filter({ $0 == (channel.isAlertGroup ? CellType.alert([]) : CellType.default([])) }).first
         if cellType == nil {
@@ -182,6 +173,7 @@ class ChannelsViewController: UITableViewController {
             return
         }
         channels.append(channel)
+        self.channels.append(channel)
         update(cellType, with: channels)
         
         guard channels.firstIndex(of: channel) != nil else {
@@ -197,6 +189,8 @@ class ChannelsViewController: UITableViewController {
             return
         }
         channels[index] = channel
+        self.channels.removeAll(where: { $0 == channel })
+        self.channels.append(channel)
         update(cellType, with: channels)
         tableView.reloadRows(at: [IndexPath(row: index, section: cellTypes.firstIndex(of: cellType) ?? 0)], with: .automatic)
     }
@@ -208,6 +202,7 @@ class ChannelsViewController: UITableViewController {
             return
         }
         channels.remove(at: index)
+        self.channels.removeAll(where: { $0 == channel })
         update(cellType, with: channels)
         tableView.deleteRows(at: [IndexPath(row: index, section: cellTypes.firstIndex(of: cellType) ?? 0)], with: .automatic)
     }
@@ -274,8 +269,7 @@ extension ChannelsViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let channel = cellTypes[indexPath.section].channels[indexPath.row]
-        let vc = ChatViewController(user: currentUser, channel: channel)
-        navigationController?.pushViewController(vc, animated: true)
+        coordinatorDelegate.show(channel: channel)
     }
     
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
