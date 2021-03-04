@@ -98,6 +98,7 @@ class ChannelsViewController: UITableViewController {
     private let groups: [AlertGroupable]
     
     deinit {
+        print("💀 DEINIT \(URL(fileURLWithPath: #file).lastPathComponent)")
         channelListener?.remove()
         ChatReadStateController.shared.stopListenning(from: self)
     }
@@ -212,7 +213,7 @@ class ChannelsViewController: UITableViewController {
             return
         }
         channel.isAlertGroup = groups.compactMap({ $0.groupId }).contains(channel.id)
-        channel.unreadCount = ChatReadStateController.shared.getUnreadCount(channelId: channel.id ?? "") ?? 0
+        channel.unreadCount = ChatReadStateController.shared.getUnreadCount(channelId: channel.id ?? "", userId: currentUser.chatId) ?? 0
         
         switch change.type {
         case .added:
@@ -289,9 +290,9 @@ extension ChannelsViewController {
 }
 
 extension ChannelsViewController: ChatReadStateDelegate {
-    func didupdate(readCount: Int, for channelId: String) {
-        guard var channel = cellTypes.flatMap({ $0.channels }).filter({ $0.id == channelId }).first else { return }
-        channel.update(readCount)
+    func didupdateRead(_ data: ChatRead) {
+        guard let channel = cellTypes.flatMap({ $0.channels }).filter({ $0.id == data.channelId }).first else { return }
+        channel.update(data.count)
         updateChannelInTable(channel)
     }
 }

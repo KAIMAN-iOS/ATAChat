@@ -8,51 +8,70 @@
 import Foundation
 import FirebaseDatabase
 
-protocol ChatReadStateDelegate: NSObjectProtocol {
-    func didupdate(readCount: Int, for channelId: String)
+public protocol ChatReadStateDelegate: NSObjectProtocol {
+    func didupdateRead(_ data: ChatRead)
 }
 
-class ChatReadStateController {
+public struct ChatRead: Hashable, Equatable {
+    public static func == (lhs: ChatRead, rhs: ChatRead) -> Bool {
+        return lhs.hashValue == rhs.hashValue
+    }
+    let channelId: String
+    let userId: String
+    let count: Int
+    let date: Date
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(channelId)
+        hasher.combine(userId)
+    }
+}
+
+public class ChatReadStateController {
     static let shared: ChatReadStateController = ChatReadStateController()
     private let db = Database.database(url: "https://ata-chauffeur-app-default-rtdb.europe-west1.firebasedatabase.app").reference()
-    private var handle: DatabaseHandle?
+//    private var handle: DatabaseHandle?
+    private struct ChatHandler {
+        let handle: DatabaseHandle
+        weak var delegate: ChatReadStateDelegate!
+    }
+    private var handles: [String: ChatHandler] = [:]
     private init() {}
-    private var delegates: [ChatReadStateDelegate] = []
-    private var unreadCount: [String: Int] = [:]
-    
-    private func addDelegate(_ delegate: ChatReadStateDelegate) {
-        guard delegates.contains(where: { $0 === delegate }) == false else { return }
-        delegates.append(delegate)
-    }
-    private func removeDelegate(_ delegate: ChatReadStateDelegate) {
-        delegates.removeAll(where: { $0 === delegate})
-    }
+    private var unreadData: Set<ChatRead> = Set<ChatRead>()
     
     public func startListenning(for chatId: String, delegate: ChatReadStateDelegate) {
-        addDelegate(delegate)
-        guard handle == nil else { return }
+        var handle = handles[chatId]
+        guard handle == nil || handle?.delegate !== delegate else { return }
         
-        handle = db.child("messages").child(chatId).observe(DataEventType.value) { snap in
+        handle = ChatHandler(handle: db.child("messages").child(chatId).observe(DataEventType.value) { snap in
             let postDict = snap.value as? [String : AnyObject] ?? [:]
             print(postDict)
             postDict.forEach { [weak self] (key, value) in
                 guard let dict = value as? [String : AnyObject],
-                      let count = dict["value"] as? Int else {
+                      let count = dict["value"] as? Int,
+                      let timestamp: Double = dict["timestamp"] as? Double else {
                     return
                 }
-                self?.unreadCount[key] = count
-                self?.delegates.forEach({ $0.didupdate(readCount: count, for: key) })
+                // the timestamp contains 3 more digits than necessary
+                let timeinterval = Double(Int(timestamp / 1000.0))
+                let readData = ChatRead(channelId: key, userId: chatId, count: count, date: Date(timeIntervalSince1970: timeinterval))
+                self?.unreadData.remove(readData)
+                self?.unreadData.insert(readData)
+                self?.handles
+                    .filter({ $0.key == chatId })
+                    .values
+                    .compactMap({ $0.delegate })
+                    .forEach({ $0.didupdateRead(readData) })
             }
-        }
+        }, delegate: delegate)
+        handles[chatId] = handle
     }
     
-    func getUnreadCount(channelId: String) -> Int? { unreadCount[channelId] }
+    func getUnreadCount(channelId: String, userId: String) -> Int? { unreadData.filter({ $0.channelId == channelId && $0.userId == userId }).first?.count }
     
     public func stopListenning(from delegate: ChatReadStateDelegate) {
-        removeDelegate(delegate)
-        if delegates.count == 0 {
-            handle = nil
-        }
+        let keys = handles.filter({ $0.value.delegate === delegate }).keys
+        keys.forEach({ handles.removeValue(forKey: $0) })
     }
     
     func resetUnreadCount(for userId: String,  channel: Channel) {

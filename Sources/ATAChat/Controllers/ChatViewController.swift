@@ -39,13 +39,15 @@ import SwiftDate
 import StringExtension
 import ColorExtension
 import UIViewControllerExtension
+import Lightbox
 
 final class ChatViewController: MessagesViewController {
     var conf: ATAConfiguration = ChannelsViewController.conf
     
     private var isSendingPhoto = false {
         didSet {
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
                 self.messageInputBar.leftStackViewItems.forEach { item in
                     (item as? InputBarButtonItem)?.isEnabled = !self.isSendingPhoto
                 }
@@ -65,6 +67,7 @@ final class ChatViewController: MessagesViewController {
     private var messageListener: ListenerRegistration?
     private let user: ChatUser
     private let channel: Channel
+    lazy var refreshControl = UIRefreshControl()
     public var showAvatars: Bool = true  {
         didSet {
             guard messagesCollectionView != nil, showAvatars == false else { return }
@@ -75,9 +78,14 @@ final class ChatViewController: MessagesViewController {
         }
     }
     var avatars: [String: UIImage] = [:]
+    // used for read/distributed for one to one discussions
+    var lastReadDate: Date?
+    
     
     deinit {
+        print("💀 DEINIT \(URL(fileURLWithPath: #file).lastPathComponent)")
         messageListener?.remove()
+        ChatReadStateController.shared.stopListenning(from: self)
     }
     
     init(user: ChatUser, channel: Channel) {
@@ -85,25 +93,33 @@ final class ChatViewController: MessagesViewController {
         self.channel = channel
         super.init(nibName: nil, bundle: nil)
         title = channel.name
+        if channel.users.count == 2 {
+            listenForRead()
+        }
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
+    private func listenForRead() {
+        guard let userId = channel.users.filter({ $0 != user.chatId }).first else { return }
+        ChatReadStateController.shared.startListenning(for: userId, delegate: self)
+    }
+    
     func downloadAvatars() {
-        self.avatars.removeAll()
-        channel.users.forEach { [weak self] userId in
-            guard let self = self else { return }
-            self.db.collection("user").document(userId).getDocument(completion: { (snap, error) in
-                let data = snap?.data()
-                if let url = URL(string: data?["avatarUrl"] as? String ?? ""),
-                   let data = try? Data(contentsOf: url) {
-                    self.avatars[userId] = UIImage(data: data)
-                }
-                self.messagesCollectionView.reloadData()
-            })
-        }
+//        self.avatars.removeAll()
+//        channel.users.forEach { [weak self] userId in
+//            guard let self = self else { return }
+//            self.db.collection("user").document(userId).getDocument(completion: { (snap, error) in
+//                let data = snap?.data()
+//                if let url = URL(string: data?["avatarUrl"] as? String ?? ""),
+//                   let data = try? Data(contentsOf: url) {
+//                    self.avatars[userId] = UIImage(data: data)
+//                }
+//                self.messagesCollectionView.reloadData()
+//            })
+//        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -113,6 +129,9 @@ final class ChatViewController: MessagesViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        refreshControl.tintColor = ChannelsViewController.conf.palette.primary
+        refreshControl.addTarget(self, action: #selector(refresh), for: .valueChanged)
+        messagesCollectionView.refreshControl = refreshControl
         ChatReadStateController.shared.resetUnreadCount(for: user.chatId, channel: channel)
         //downloadAvatars()
         hideBackButtonText = true
@@ -122,25 +141,8 @@ final class ChatViewController: MessagesViewController {
 //            $0.setSize(CGSize(width: 50, height: 50), animated: false)
         }
         
-        guard let id = channel.id else {
-            navigationController?.popViewController(animated: true)
-            return
-        }
-        
-        reference = db.collection(["messages", id, "messages"].joined(separator: "/"))
-        messageListener = reference?.addSnapshotListener { querySnapshot, error in
-            guard let snapshot = querySnapshot else {
-                print("Error listening for channel updates: \(error?.localizedDescription ?? "No error")")
-                return
-            }
-            
-            snapshot.documentChanges.forEach { change in
-                self.handleDocumentChange(change)
-            }
-        }
-        
+        loadMessages()
         navigationItem.largeTitleDisplayMode = .never
-        
         maintainPositionOnKeyboardFrameChanged = true
         messageInputBar.inputTextView.tintColor = conf.palette.primary
         messageInputBar.sendButton.setTitleColor(conf.palette.primary, for: .normal)
@@ -149,6 +151,7 @@ final class ChatViewController: MessagesViewController {
         messagesCollectionView.messagesDataSource = self
         messagesCollectionView.messagesLayoutDelegate = self
         messagesCollectionView.messagesDisplayDelegate = self
+        messagesCollectionView.messageCellDelegate = self
         
         let cameraItem = InputBarButtonItem(type: .system) // 1
         cameraItem.tintColor = conf.palette.primary
@@ -171,16 +174,65 @@ final class ChatViewController: MessagesViewController {
         }
     }
     
-    // MARK: - Actions
+    func loadMessages() {
+        guard let id = channel.id else {
+            navigationController?.popViewController(animated: true)
+            return
+        }
+        reference = db.collection(["messages", id, "messages"].joined(separator: "/"))
+        refresh()
+    }
     
+    var nextQuery: Query?
+    private static let documentLimit = 5
+    @objc func refresh() {
+        guard messageListener != nil else {
+            messageListener = reference?
+                .order(by: "sentAt", descending: true)
+                .limit(to: ChatViewController.documentLimit)
+                .addSnapshotListener { [weak self] querySnapshot, error in
+                    guard let self = self else { return }
+                    guard let snapshot = querySnapshot else {
+                        print("Error listening for channel updates: \(error?.localizedDescription ?? "No error")")
+                        return
+                    }
+                    self.handle(snapshot: snapshot)
+                }
+            return
+        }
+        
+        nextQuery?.addSnapshotListener { [weak self] querySnapshot, error in
+            guard let self = self else { return }
+            guard let snapshot = querySnapshot else {
+                print("Error listening for channel updates: \(error?.localizedDescription ?? "No error")")
+                return
+            }
+            self.handle(snapshot: snapshot)
+        }
+    }
+    
+    func handle(snapshot: QuerySnapshot) {
+        messagesCollectionView.refreshControl?.endRefreshing()
+        snapshot.documentChanges.forEach { change in
+            self.handleDocumentChange(change)
+        }
+        
+        guard let lastSnapshot = snapshot.documents.last else {
+            // The collection is empty.
+            return
+        }
+        nextQuery = self.reference?.order(by: "sentAt", descending: true).start(afterDocument: lastSnapshot).limit(to: ChatViewController.documentLimit)
+    }
+    
+    // MARK: - Actions
     @objc private func cameraButtonPressed() {
         presentImagePickerChoice(delegate: self, tintColor: conf.palette.primary)
     }
     
     // MARK: - Helpers
-    
     private func save(_ message: Message) {
-        reference?.addDocument(data: message.representation) { error in
+        reference?.addDocument(data: message.representation) { [weak self] error in
+            guard let self = self else { return }
             if let e = error {
                 print("Error sending message: \(e.localizedDescription)")
                 return
@@ -204,8 +256,8 @@ final class ChatViewController: MessagesViewController {
         messagesCollectionView.reloadData()
         
         if shouldScrollToBottom {
-            DispatchQueue.main.async {
-                self.messagesCollectionView.scrollToLastItem()
+            DispatchQueue.main.async { [weak self] in
+                self?.messagesCollectionView.scrollToLastItem()
             }
         }
     }
@@ -219,9 +271,7 @@ final class ChatViewController: MessagesViewController {
         case .added:
             if let url = message.downloadURL {
                 downloadImage(at: url) { [weak self] image in
-                    guard let `self` = self else {
-                        return
-                    }
+                    guard let self = self else { return }
                     guard let image = image else {
                         return
                     }
@@ -234,8 +284,13 @@ final class ChatViewController: MessagesViewController {
                 insertNewMessage(message)
             }
             
-        default:
-            break
+            // mark as read right away if one to one conversation
+            // otherwise, it will b marked as read once when the controller is dismissed
+            if message.sender.senderId != user.chatId, channel.users.count == 2 {
+                ChatReadStateController.shared.resetUnreadCount(for: user.chatId, channel: channel)
+            }
+            
+        default: ()
         }
     }
     
@@ -275,6 +330,7 @@ final class ChatViewController: MessagesViewController {
     }
     
     private func sendPhoto(_ image: UIImage) {
+        guard isSendingPhoto == false else { return }
         isSendingPhoto = true
         
         uploadImage(image, to: channel) { [weak self] url in
@@ -305,6 +361,27 @@ final class ChatViewController: MessagesViewController {
             }
             
             completion(UIImage(data: imageData))
+        }
+    }
+}
+
+extension ChatViewController: MessageCellDelegate {
+    func didTapImage(in cell: MessageCollectionViewCell) {
+        guard let indexPath = messagesCollectionView.indexPath(for: cell) else { return }
+        let message = messages[indexPath.section]
+        switch message.kind {
+        case .photo(let item):
+            var images: [LightboxImage] = []
+            if let image = item.image {
+                images.append(LightboxImage(image: image))
+            }
+            guard images.count == 1 else { return }
+            LightboxConfig.CloseButton.text = "close".local()
+            let controller = LightboxController(images: images)
+            controller.dynamicBackground = true
+            present(controller, animated: true, completion: nil)
+            
+        default: ()
         }
     }
 }
@@ -386,10 +463,21 @@ extension ChatViewController: MessagesDataSource {
     }
     
     func messageBottomLabelAttributedText(for message: MessageType, at indexPath: IndexPath) -> NSAttributedString? {
+        // bottom message (read/distribited) only for 2 people conversation
+        guard channel.users.count == 2 else { return nil }
+        // no lable if the message is not from the current sender
+        guard message.sender.senderId == user.chatId else { return nil }
+        guard indexPath.section == messages.count - 1 else { return nil }
         let date = message.sentDate
-        guard let dateString = date.isToday ? DateFormatter.relativeDateFormatter.string(for: date) : DateFormatter.timeOnlyFormatter.string(for: date) else { return nil }
+        guard let lastReadDate = self.lastReadDate, lastReadDate > date else {
+            return NSAttributedString {
+                AText("distributed".bundleLocale())
+                    .font(.applicationFont(forTextStyle: .caption2))
+                    .foregroundColor(conf.palette.inactive)
+            }
+        }
         return NSAttributedString {
-            AText(dateString)
+            AText(String(format: "read at".bundleLocale(), DateFormatter.relativeDateFormatter.string(for: lastReadDate) ?? ""))
                 .font(.applicationFont(forTextStyle: .caption2))
                 .foregroundColor(conf.palette.inactive)
         }
@@ -409,7 +497,7 @@ extension ChatViewController: MessagesDataSource {
     }
     
     func messageBottomLabelHeight(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> CGFloat {
-        return 16
+        16
     }
 
     func configureAvatarView(_ avatarView: AvatarView, for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) {
@@ -465,7 +553,6 @@ extension ChatViewController: InputBarAccessoryViewDelegate {
         save(message)
         inputBar.inputTextView.text = ""
     }
-    
 }
 
 // MARK: - UIImagePickerControllerDelegate
@@ -476,21 +563,32 @@ extension ChatViewController: UIImagePickerControllerDelegate, UINavigationContr
         picker.dismiss(animated: true, completion: nil)
         
         if let asset = info[.phAsset] as? PHAsset { // 1
-            let size = CGSize(width: 500, height: 500)
-            PHImageManager.default().requestImage(for: asset, targetSize: size, contentMode: .aspectFit, options: nil) { result, info in
-                guard let image = result else {
+            let size = CGSize(width: 1500, height: 1500)
+            PHImageManager.default().requestImage(for: asset, targetSize: size, contentMode: .aspectFit, options: nil) { [weak self] result, info in
+                guard let image = result,
+                      let info = info,
+                      (info[PHImageResultIsDegradedKey] as? Int ?? Int.max) == 0 else {
                     return
                 }
                 
-                self.sendPhoto(image)
+                self?.sendPhoto(image)
             }
         } else if let image = info[.originalImage] as? UIImage { // 2
-            sendPhoto(image)
+            sendPhoto(image.scalePreservingAspectRatio(targetSize: CGSize(width: 1500, height: 1500)))
         }
     }
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         picker.dismiss(animated: true, completion: nil)
     }
-    
+}
+
+extension ChatViewController: ChatReadStateDelegate {
+    func didupdateRead(_ data: ChatRead) {
+        guard data.channelId == channel.id, data.count == 0 else { return }
+        lastReadDate = data.date
+        guard let lastMessage = messages.last,
+              lastMessage.sender.senderId == user.chatId  else { return }
+        messagesCollectionView.reloadItems(at: [IndexPath(row: 0, section: messages.count - 1)])
+    }
 }
