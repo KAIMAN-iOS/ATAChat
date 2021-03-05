@@ -209,7 +209,7 @@ class ChannelsViewController: UITableViewController {
     }
     
     private func handleDocumentChange(_ change: DocumentChange) {
-        guard var channel = Channel(document: change.document) else {
+        guard let channel = Channel(document: change.document) else {
             return
         }
         channel.isAlertGroup = groups.compactMap({ $0.groupId }).contains(channel.id)

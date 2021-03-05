@@ -70,7 +70,7 @@ final class ChatViewController: MessagesViewController {
     lazy var refreshControl = UIRefreshControl()
     public var showAvatars: Bool = true  {
         didSet {
-            guard messagesCollectionView != nil, showAvatars == false else { return }
+            guard showAvatars == false else { return }
             if let layout = messagesCollectionView.collectionViewLayout as? MessagesCollectionViewFlowLayout {
               layout.setMessageIncomingAvatarSize(.zero)
               layout.setMessageOutgoingAvatarSize(.zero)
@@ -108,18 +108,18 @@ final class ChatViewController: MessagesViewController {
     }
     
     func downloadAvatars() {
-//        self.avatars.removeAll()
-//        channel.users.forEach { [weak self] userId in
-//            guard let self = self else { return }
-//            self.db.collection("user").document(userId).getDocument(completion: { (snap, error) in
-//                let data = snap?.data()
-//                if let url = URL(string: data?["avatarUrl"] as? String ?? ""),
-//                   let data = try? Data(contentsOf: url) {
-//                    self.avatars[userId] = UIImage(data: data)
-//                }
-//                self.messagesCollectionView.reloadData()
-//            })
-//        }
+        self.avatars.removeAll()
+        channel.users.forEach { [weak self] userId in
+            guard let self = self else { return }
+            self.db.collection("user").document(userId).getDocument(completion: { (snap, error) in
+                let data = snap?.data()
+                if let url = URL(string: data?["avatarUrl"] as? String ?? ""),
+                   let data = try? Data(contentsOf: url) {
+                    self.avatars[userId] = UIImage(data: data)
+                }
+                self.messagesCollectionView.reloadData()
+            })
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -184,7 +184,7 @@ final class ChatViewController: MessagesViewController {
     }
     
     var nextQuery: Query?
-    private static let documentLimit = 5
+    private static let documentLimit = 20
     @objc func refresh() {
         guard messageListener != nil else {
             messageListener = reference?
@@ -219,6 +219,7 @@ final class ChatViewController: MessagesViewController {
         
         guard let lastSnapshot = snapshot.documents.last else {
             // The collection is empty.
+            messagesCollectionView.refreshControl = nil
             return
         }
         nextQuery = self.reference?.order(by: "sentAt", descending: true).start(afterDocument: lastSnapshot).limit(to: ChatViewController.documentLimit)
