@@ -36,6 +36,7 @@ import SnapKit
 import LabelExtension
 import TableViewExtension
 import EasyNotificationBadge
+import Lottie
 
 public protocol AlertGroupable {
     var isAlertGroup: Bool { get }
@@ -63,8 +64,8 @@ class ChannelsViewController: UITableViewController {
         }
         static func < (lhs: CellType, rhs: CellType) -> Bool {
             switch (lhs, rhs) {
-            case (.alert, .default): return true
-            default: return false
+            case (.alert, .default): return false
+            default: return true
             }
         }
         
@@ -88,14 +89,16 @@ class ChannelsViewController: UITableViewController {
         return label
     }()
     weak var coordinatorDelegate: ChatCoordinatorDelegate!
-    private let channelCellIdentifier = "channelCell"
+    private static let channelCellIdentifier = "channelCell"
     private var currentChannelAlertController: UIAlertController?
     private let db = Firestore.firestore()
     private var channelReference: CollectionReference { db.collection("messages") }
     private var channelListener: ListenerRegistration?
 //    private var channels = [Channel]()
-    private let currentUser: ChatUser
-    private let groups: [AlertGroupable]
+    private var currentUser: ChatUser!
+    private var groups: [AlertGroupable] = []
+    private var noChannelAnimation: Animation!
+    private var emojiAnimation: Animation!
     
     deinit {
         print("💀 DEINIT \(URL(fileURLWithPath: #file).lastPathComponent)")
@@ -103,22 +106,23 @@ class ChannelsViewController: UITableViewController {
         ChatReadStateController.shared.stopListenning(from: self)
     }
     
-    init(currentUser: ChatUser,
-         groups: [AlertGroupable],
-         coordinatorDelegate: ChatCoordinatorDelegate) {
-        self.currentUser = currentUser
-        self.groups = groups
-        self.coordinatorDelegate = coordinatorDelegate
-        super.init(style: .grouped)
-        view.backgroundColor = .white
-        tableView.backgroundColor = .white
-        tableView.separatorStyle = .none
-        clearsSelectionOnViewWillAppear = true
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: channelCellIdentifier)
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+    static func create(currentUser: ChatUser,
+                       groups: [AlertGroupable],
+                       coordinatorDelegate: ChatCoordinatorDelegate,
+                       emojiAnimation: Animation,
+                       noChannelAnimation: Animation) -> ChannelsViewController {
+        let ctrl: ChannelsViewController = UIStoryboard(name: "ATAChat", bundle: Bundle.module).instantiateViewController(identifier: "ChannelsViewController") as! ChannelsViewController
+        ctrl.currentUser = currentUser
+        ctrl.groups = groups
+        ctrl.coordinatorDelegate = coordinatorDelegate
+        ctrl.emojiAnimation = emojiAnimation
+        ctrl.noChannelAnimation = noChannelAnimation
+        ctrl.view.backgroundColor = .white
+        ctrl.tableView.backgroundColor = .white
+        ctrl.tableView.separatorStyle = .none
+        ctrl.clearsSelectionOnViewWillAppear = true
+        ctrl.tableView.register(UITableViewCell.self, forCellReuseIdentifier: ChannelsViewController.channelCellIdentifier)
+        return ctrl
     }
     
     func startListenning() {
@@ -138,11 +142,76 @@ class ChannelsViewController: UITableViewController {
         ChatReadStateController.shared.startListenning(for: currentUser.chatId, delegate: self)
     }
     
+    var emojiAnimationView: AnimationView?
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationController?.navigationBar.prefersLargeTitles = true
         title = "Channels".bundleLocale()
         hideBackButtonText = true
+        emojiAnimationView = AnimationView(animation: emojiAnimation)
+        startListenning()
+    }
+    
+    var noChannelAnimationView: AnimationView?
+    var noChannelContainer: UIStackView!
+    private func loadNoChannelView() {
+        noChannelAnimationView = AnimationView(animation: noChannelAnimation)
+        if let animationView = noChannelAnimationView {
+            noChannelContainer = UIStackView()
+            noChannelContainer.axis = .vertical
+            noChannelContainer.spacing = 20
+            noChannelContainer.distribution = .fill
+            noChannelContainer.addArrangedSubview(animationView)
+            let label = UILabel()
+            label.backgroundColor = .clear
+            label.numberOfLines = 0
+            label.textAlignment = .center
+            label.set(text: "no channel".bundleLocale().uppercased(), for: .callout, textColor: ChannelsViewController.conf.palette.inactive)
+            noChannelContainer.addArrangedSubview(label)
+            animationView.snp.makeConstraints {
+                $0.height.equalTo(100)
+            }
+            tableView.addSubview(noChannelContainer)
+            noChannelContainer.snp.makeConstraints {
+                $0.centerX.equalToSuperview()
+                $0.leftMargin.rightMargin.equalToSuperview()
+                $0.top.equalToSuperview().offset(view.bounds.midY / 2.0)
+            }
+            animationView.loopMode = .loop
+            animationView.play { _ in }
+            animationView.alpha = 0.8
+        }
+    }
+    
+    private func loadEmojiView() {
+        if let animationView = emojiAnimationView {
+            tableView.addSubview(animationView)
+            animationView.snp.makeConstraints({
+                $0.edges.equalToSuperview()
+                $0.height.width.equalToSuperview()
+            })
+            animationView.contentMode = .scaleAspectFit
+            animationView.translatesAutoresizingMaskIntoConstraints = false
+            animationView.isUserInteractionEnabled = false
+            view.bringSubviewToFront(animationView)
+
+            animationView.play(completion: { [weak self] success in
+                self?.emojiAnimationView?.removeFromSuperview()
+                self?.emojiAnimationView = nil
+            })
+        }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        if channels.isEmpty {
+            loadNoChannelView()
+        } else if emojiAnimationView != nil {
+            loadEmojiView()
+        }
         navigationController?.navigationBar.prefersLargeTitles = true
+        navigationController?.navigationBar.shadowImage = UIImage()
+        super.viewWillAppear(animated)
+        tableView.setContentOffset(CGPoint(x: 0, y: -1), animated: true)
     }
     
     // MARK: - Helpers
@@ -212,6 +281,10 @@ class ChannelsViewController: UITableViewController {
         guard let channel = Channel(document: change.document) else {
             return
         }
+        noChannelContainer.isHidden = true
+        if channels.count == 0 {
+            loadEmojiView()
+        }
         channel.isAlertGroup = groups.compactMap({ $0.groupId }).contains(channel.id)
         channel.unreadCount = ChatReadStateController.shared.getUnreadCount(channelId: channel.id ?? "", userId: currentUser.chatId) ?? 0
         
@@ -249,7 +322,7 @@ extension ChannelsViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: channelCellIdentifier, for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: ChannelsViewController.channelCellIdentifier, for: indexPath)
         let channel = cellTypes[indexPath.section].channels[indexPath.row]
         cell.accessoryType = .disclosureIndicator
         cell.textLabel?.set(text: channel.name,

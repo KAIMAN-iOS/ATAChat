@@ -8,6 +8,7 @@
 import UIKit
 import KCoordinatorKit
 import ATAConfiguration
+import Lottie
 
 protocol ChatCoordinatorDelegate: NSObjectProtocol {
     func show(channel: Channel)
@@ -21,11 +22,17 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
                 currentUser: ChatUser,
                 channelId: String? = nil,
                 groups: [AlertGroupable],
-                conf: ATAConfiguration) {
+                conf: ATAConfiguration,
+                emojiAnimation: Animation,
+                noChannelAnimation: Animation) {
         super.init(router: router)
         self.currentUser = currentUser
         self.channelId = channelId
-        channelController = ChannelsViewController(currentUser: currentUser, groups: groups, coordinatorDelegate: self)
+        channelController = ChannelsViewController.create(currentUser: currentUser,
+                                                          groups: groups,
+                                                          coordinatorDelegate: self,
+                                                          emojiAnimation: emojiAnimation,
+                                                          noChannelAnimation: noChannelAnimation)
         channelController.startListenning()
         ChannelsViewController.conf = conf
     }
