@@ -121,7 +121,6 @@ class ChannelsViewController: UITableViewController {
         ctrl.tableView.backgroundColor = .white
         ctrl.tableView.separatorStyle = .none
         ctrl.clearsSelectionOnViewWillAppear = true
-        ctrl.tableView.register(UITableViewCell.self, forCellReuseIdentifier: ChannelsViewController.channelCellIdentifier)
         return ctrl
     }
     
@@ -149,7 +148,8 @@ class ChannelsViewController: UITableViewController {
         title = "Channels".bundleLocale()
         hideBackButtonText = true
         emojiAnimationView = AnimationView(animation: emojiAnimation)
-        startListenning()
+        tableView.estimatedRowHeight = 45
+        tableView.rowHeight = UITableView.automaticDimension
     }
     
     var noChannelAnimationView: AnimationView?
@@ -211,7 +211,7 @@ class ChannelsViewController: UITableViewController {
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationController?.navigationBar.shadowImage = UIImage()
         super.viewWillAppear(animated)
-        tableView.setContentOffset(CGPoint(x: 0, y: -1), animated: true)
+        startListenning()
     }
     
     // MARK: - Helpers
@@ -312,24 +312,18 @@ extension ChannelsViewController {
         return cellTypes[section].channels.count
     }
     
-    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 55
-    }
-    
     override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
         guard let index = cellTypes.firstIndex(of: .alert([])), section == index else { return 0 }
-        return 44
+        return 64
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: ChannelsViewController.channelCellIdentifier, for: indexPath)
+        guard let cell: ChannelCell = tableView.automaticallyDequeueReusableCell(forIndexPath: indexPath) else {
+            return UITableViewCell()
+        }
         let channel = cellTypes[indexPath.section].channels[indexPath.row]
-        cell.accessoryType = .disclosureIndicator
-        cell.textLabel?.set(text: channel.name,
-                            for: .body,
-                            textColor: ChannelsViewController.conf.palette.mainTexts)
+        cell.configure(channel)
         cell.textLabel?.font = .applicationFont(forTextStyle: .callout)
-        cell.addDefaultSelectedBackground(ChannelsViewController.conf.palette.primary.withAlphaComponent(0.3))
         
         if channel.unreadCount > 0 {
             cell.imageView?.image = UIImage()
@@ -355,8 +349,17 @@ extension ChannelsViewController {
         label.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(20)
             make.top.equalToSuperview().offset(12)
-            make.bottom.equalToSuperview().offset(8)
+            make.bottom.equalToSuperview().offset(16)
             make.trailingMargin.equalToSuperview()
+        }
+        let separator = UIView()
+        separator.backgroundColor = ChannelsViewController.conf.palette.lightGray
+        view.addSubview(separator)
+        separator.snp.makeConstraints {
+            $0.bottom.equalToSuperview()
+            $0.left.equalToSuperview().offset(16)
+            $0.right.equalToSuperview().inset(16)
+            $0.height.equalTo(1)
         }
         return view
     }
