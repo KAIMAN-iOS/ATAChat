@@ -54,6 +54,7 @@ final class ChatViewController: MessagesViewController {
             }
         }
     }
+    static var inputColor = UIColor(hexString: "767676")
     
     private let formatter: DateFormatter = {
             let formatter = DateFormatter()
@@ -135,17 +136,12 @@ final class ChatViewController: MessagesViewController {
         ChatReadStateController.shared.resetUnreadCount(for: user.chatId, channel: channel)
         //downloadAvatars()
         hideBackButtonText = true
-        messageInputBar.sendButton.configure {
-            $0.image = UIImage(systemName: "arrow.up.circle.fill", withConfiguration: UIImage.SymbolConfiguration.init(scale: .large))
-            $0.title = nil
-//            $0.setSize(CGSize(width: 50, height: 50), animated: false)
-        }
+        
         
         loadMessages()
         navigationItem.largeTitleDisplayMode = .never
         maintainPositionOnKeyboardFrameChanged = true
-        messageInputBar.inputTextView.tintColor = conf.palette.primary
-        messageInputBar.sendButton.setTitleColor(conf.palette.primary, for: .normal)
+        configureInputBar()
         showMessageTimestampOnSwipeLeft = true
         messageInputBar.delegate = self
         messagesCollectionView.messagesDataSource = self
@@ -153,8 +149,43 @@ final class ChatViewController: MessagesViewController {
         messagesCollectionView.messagesDisplayDelegate = self
         messagesCollectionView.messageCellDelegate = self
         
+        guard showAvatars == false else { return }
+        if let layout = messagesCollectionView.collectionViewLayout as? MessagesCollectionViewFlowLayout {
+          layout.setMessageIncomingAvatarSize(.zero)
+          layout.setMessageOutgoingAvatarSize(.zero)
+        }
+    }
+    
+    func configureInputBar() {
+        messageInputBar.inputTextView.textContainerInset = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 36)
+        messageInputBar.inputTextView.placeholderLabelInsets = UIEdgeInsets(top: 8, left: 20, bottom: 8, right: 36)
+        messageInputBar.inputTextView.layer.borderWidth = 1.0
+        messageInputBar.inputTextView.layer.cornerRadius = 16.0
+        messageInputBar.inputTextView.layer.masksToBounds = true
+        messageInputBar.inputTextView.scrollIndicatorInsets = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
+        messageInputBar.setRightStackViewWidthConstant(to: 38, animated: false)
+        messageInputBar.sendButton.contentEdgeInsets = UIEdgeInsets(top: 2, left: 2, bottom: 2, right: 2)
+        messageInputBar.sendButton.setSize(CGSize(width: 36, height: 36), animated: false)
+        messageInputBar.sendButton.title = nil
+        messageInputBar.sendButton.imageView?.layer.cornerRadius = 16
+        messageInputBar.sendButton.backgroundColor = .clear
+        messageInputBar.middleContentViewPadding.right = -38
+        messageInputBar.separatorLine.isHidden = true
+        messageInputBar.inputTextView.layer.borderColor = conf.palette.inactive.cgColor
+        messageInputBar.backgroundColor = .white
+        messageInputBar.sendButton.tintColor = ChatViewController.inputColor
+        messageInputBar.sendButton.onTextViewDidChange { [weak self] (button, textView) in
+            button.tintColor = textView.text.isEmpty ? ChatViewController.inputColor : self?.conf.palette.primary
+        }
+        messageInputBar.sendButton.configure {
+            $0.image = UIImage(systemName: "arrow.up.circle.fill", withConfiguration: UIImage.SymbolConfiguration.init(scale: .large))
+            $0.title = nil
+        }
+        messageInputBar.inputTextView.tintColor = ChatViewController.inputColor
+        messageInputBar.sendButton.setTitleColor(ChatViewController.inputColor, for: .normal)
+        
         let cameraItem = InputBarButtonItem(type: .system) // 1
-        cameraItem.tintColor = conf.palette.primary
+        cameraItem.tintColor = ChatViewController.inputColor
         cameraItem.image = #imageLiteral(resourceName: "camera")
         cameraItem.addTarget(
             self,
@@ -166,12 +197,6 @@ final class ChatViewController: MessagesViewController {
         messageInputBar.leftStackView.alignment = .center
         messageInputBar.setLeftStackViewWidthConstant(to: 50, animated: false)
         messageInputBar.setStackViewItems([cameraItem], forStack: .left, animated: false) // 3
-        
-        guard showAvatars == false else { return }
-        if let layout = messagesCollectionView.collectionViewLayout as? MessagesCollectionViewFlowLayout {
-          layout.setMessageIncomingAvatarSize(.zero)
-          layout.setMessageOutgoingAvatarSize(.zero)
-        }
     }
     
     func loadMessages() {
