@@ -281,7 +281,7 @@ class ChannelsViewController: UITableViewController {
         guard let channel = Channel(document: change.document) else {
             return
         }
-        noChannelContainer.isHidden = true
+        noChannelContainer?.isHidden = true
         if channels.count == 0 {
             loadEmojiView()
         }
