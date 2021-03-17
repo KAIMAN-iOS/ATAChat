@@ -14,4 +14,7 @@ public struct TokenController {
     public static func update(token: String, for userId: String) {
         userReference.document(userId).updateData(["notificationTokens" : FieldValue.arrayUnion([token])])
     }
+    public static func remove(token: String, for userId: String) {
+        userReference.document(userId).updateData(["notificationTokens" : FieldValue.arrayRemove([token])])
+    }
 }
