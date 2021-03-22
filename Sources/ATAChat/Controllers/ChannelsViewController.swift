@@ -117,8 +117,6 @@ class ChannelsViewController: UITableViewController {
         ctrl.coordinatorDelegate = coordinatorDelegate
         ctrl.emojiAnimation = emojiAnimation
         ctrl.noChannelAnimation = noChannelAnimation
-        ctrl.view.backgroundColor = .white
-        ctrl.tableView.backgroundColor = .white
         ctrl.tableView.separatorStyle = .none
         ctrl.clearsSelectionOnViewWillAppear = true
         return ctrl
@@ -144,6 +142,8 @@ class ChannelsViewController: UITableViewController {
     var emojiAnimationView: AnimationView?
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = ChannelsViewController.conf.palette.background
+        tableView.backgroundColor = ChannelsViewController.conf.palette.background
         navigationController?.navigationBar.prefersLargeTitles = true
         title = "Channels".bundleLocale()
         hideBackButtonText = true

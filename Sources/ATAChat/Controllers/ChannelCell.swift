@@ -17,6 +17,7 @@ class ChannelCell: UITableViewCell {
     }
     @IBOutlet weak var label: UILabel!
     func configure(_ channel: Channel) {
+        backgroundColor = ChannelsViewController.conf.palette.background
         icon.isHidden = true
         label.set(text: channel.name, for: .subheadline, textColor: ChannelsViewController.conf.palette.mainTexts)
     }

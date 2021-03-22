@@ -26,6 +26,7 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
                 emojiAnimation: Animation,
                 noChannelAnimation: Animation) {
         super.init(router: router)
+        ChannelsViewController.conf = conf
         self.currentUser = currentUser
         self.channelId = channelId
         channelController = ChannelsViewController.create(currentUser: currentUser,
@@ -34,7 +35,6 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
                                                           emojiAnimation: emojiAnimation,
                                                           noChannelAnimation: noChannelAnimation)
         channelController.startListenning()
-        ChannelsViewController.conf = conf
     }
     public override func toPresentable() -> UIViewController { channelController }
     

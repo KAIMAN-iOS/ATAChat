@@ -173,7 +173,7 @@ final class ChatViewController: MessagesViewController {
         messageInputBar.separatorLine.isHidden = true
         messageInputBar.inputTextView.layer.borderColor = conf.palette.inactive.cgColor
         messageInputBar.inputTextView.placeholder = "message".local()
-        messageInputBar.backgroundColor = .white
+        messageInputBar.backgroundColor = ChannelsViewController.conf.palette.background
         messageInputBar.sendButton.tintColor = ChatViewController.inputColor
         messageInputBar.sendButton.onTextViewDidChange { [weak self] (button, textView) in
             button.tintColor = textView.text.isEmpty ? ChatViewController.inputColor : self?.conf.palette.primary
