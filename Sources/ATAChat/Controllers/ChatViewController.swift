@@ -40,6 +40,7 @@ import StringExtension
 import ColorExtension
 import UIViewControllerExtension
 import Lightbox
+import IQKeyboardManagerSwift
 
 final class ChatViewController: MessagesViewController {
     var conf: ATAConfiguration = ChannelsViewController.conf
@@ -97,6 +98,7 @@ final class ChatViewController: MessagesViewController {
         if channel.users.count == 2 {
             listenForRead()
         }
+        IQKeyboardManager.shared.enable = false
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -126,6 +128,7 @@ final class ChatViewController: MessagesViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         ChatReadStateController.shared.resetUnreadCount(for: user.chatId, channel: channel)
+        IQKeyboardManager.shared.enable = true
     }
     
     override func viewDidLoad() {
@@ -137,7 +140,6 @@ final class ChatViewController: MessagesViewController {
         //downloadAvatars()
         hideBackButtonText = true
         
-        
         loadMessages()
         navigationItem.largeTitleDisplayMode = .never
         maintainPositionOnKeyboardFrameChanged = true
@@ -148,6 +150,7 @@ final class ChatViewController: MessagesViewController {
         messagesCollectionView.messagesLayoutDelegate = self
         messagesCollectionView.messagesDisplayDelegate = self
         messagesCollectionView.messageCellDelegate = self
+//        scrollsToLastItemOnKeyboardBeginsEditing = true
         
         guard showAvatars == false else { return }
         if let layout = messagesCollectionView.collectionViewLayout as? MessagesCollectionViewFlowLayout {
@@ -259,14 +262,16 @@ final class ChatViewController: MessagesViewController {
     // MARK: - Helpers
     private func save(_ message: Message) {
         reference?.addDocument(data: message.representation) { [weak self] error in
-            guard let self = self else { return }
-            if let e = error {
-                print("Error sending message: \(e.localizedDescription)")
+            if let error = error {
+                print("Error sending message: \(error.localizedDescription)")
                 return
             }
-            
-            self.messagesCollectionView.scrollToLastItem()
+//            self?.scrollToBottom()
         }
+    }
+    
+    private func scrollToBottom() {
+        messagesCollectionView.scrollToLastItem(at: .top)
     }
     
     private func insertNewMessage(_ message: Message) {
@@ -277,15 +282,13 @@ final class ChatViewController: MessagesViewController {
         messages.append(message)
         messages.sort()
         
-        let isLatestMessage = messages.firstIndex(of: message) == (messages.count - 1)
-        let shouldScrollToBottom = messagesCollectionView.isAtBottom && isLatestMessage
+//        let isLatestMessage = messages.firstIndex(of: message) == (messages.count - 1)
+//        let shouldScrollToBottom = messagesCollectionView.isAtBottom && isLatestMessage
         
         messagesCollectionView.reloadData()
         
-        if shouldScrollToBottom {
-            DispatchQueue.main.async { [weak self] in
-                self?.messagesCollectionView.scrollToLastItem()
-            }
+        DispatchQueue.main.async { [weak self] in
+            self?.scrollToBottom()
         }
     }
     
