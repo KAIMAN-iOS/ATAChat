@@ -13,6 +13,7 @@ import Lottie
 protocol ChatCoordinatorDelegate: NSObjectProtocol {
     func show(channel: Channel)
 }
+public enum Mode { case driver, passenger }
 
 public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
     dynamic var channelController: ChannelsViewController!
@@ -21,7 +22,8 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
     public init(router: RouterType,
                 currentUser: ChatUser,
                 channelId: String? = nil,
-                groups: [AlertGroupable],
+                mode: Mode = .driver,
+                groups: [AlertGroupable] = [],
                 conf: ATAConfiguration,
                 emojiAnimation: Animation,
                 noChannelAnimation: Animation) {
@@ -31,6 +33,7 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
         self.channelId = channelId
         channelController = ChannelsViewController.create(currentUser: currentUser,
                                                           groups: groups,
+                                                          mode: mode,
                                                           coordinatorDelegate: self,
                                                           emojiAnimation: emojiAnimation,
                                                           noChannelAnimation: noChannelAnimation)

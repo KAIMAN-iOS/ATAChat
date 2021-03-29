@@ -38,6 +38,15 @@ import TableViewExtension
 import EasyNotificationBadge
 import Lottie
 
+extension Mode {
+    var noChannelTitle: String {
+        switch self {
+        case .driver: return "no channel".bundleLocale()
+        case .passenger: return "no channel passenger".bundleLocale()
+        }
+    }
+}
+
 public protocol AlertGroupable {
     var isAlertGroup: Bool { get }
     var groupId: String { get }
@@ -54,6 +63,7 @@ protocol Channelable {
 }
 
 class ChannelsViewController: UITableViewController {
+    var mode: Mode!
     enum CellType: Equatable, Comparable {
         static func == (lhs: CellType, rhs: CellType) -> Bool {
             switch (lhs, rhs) {
@@ -108,11 +118,13 @@ class ChannelsViewController: UITableViewController {
     
     static func create(currentUser: ChatUser,
                        groups: [AlertGroupable],
+                       mode: Mode = .driver,
                        coordinatorDelegate: ChatCoordinatorDelegate,
                        emojiAnimation: Animation,
                        noChannelAnimation: Animation) -> ChannelsViewController {
         let ctrl: ChannelsViewController = UIStoryboard(name: "ATAChat", bundle: Bundle.module).instantiateViewController(identifier: "ChannelsViewController") as! ChannelsViewController
         ctrl.currentUser = currentUser
+        ctrl.mode = mode
         ctrl.groups = groups
         ctrl.coordinatorDelegate = coordinatorDelegate
         ctrl.emojiAnimation = emojiAnimation
@@ -166,7 +178,7 @@ class ChannelsViewController: UITableViewController {
             label.backgroundColor = .clear
             label.numberOfLines = 0
             label.textAlignment = .center
-            label.set(text: "no channel".bundleLocale().uppercased(), for: .callout, textColor: ChannelsViewController.conf.palette.inactive)
+            label.set(text: mode.noChannelTitle.uppercased(), for: .callout, textColor: ChannelsViewController.conf.palette.inactive)
             noChannelContainer.addArrangedSubview(label)
             animationView.snp.makeConstraints {
                 $0.height.equalTo(100)
