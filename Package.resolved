@@ -56,6 +56,24 @@
         }
       },
       {
+        "package": "Cache",
+        "repositoryURL": "https://github.com/hyperoslo/Cache",
+        "state": {
+          "branch": "master",
+          "revision": "520b1afd229e25051878c65ce1e780628ea43b4d",
+          "version": null
+        }
+      },
+      {
+        "package": "EasyNotificationBadge",
+        "repositoryURL": "https://github.com/Minitour/EasyNotificationBadge",
+        "state": {
+          "branch": null,
+          "revision": "2774998af193a396b1842c0727fe52c2bd217ae2",
+          "version": "1.2.5"
+        }
+      },
+      {
         "package": "Firebase",
         "repositoryURL": "https://github.com/firebase/firebase-ios-sdk.git",
         "state": {
@@ -110,6 +128,15 @@
         }
       },
       {
+        "package": "Imaginary",
+        "repositoryURL": "https://github.com/hyperoslo/Imaginary",
+        "state": {
+          "branch": "master",
+          "revision": "5da646269754856f60ae463652858f64dfe4d4e5",
+          "version": null
+        }
+      },
+      {
         "package": "InputBarAccessoryView",
         "repositoryURL": "https://github.com/nathantannar4/InputBarAccessoryView",
         "state": {
@@ -152,6 +179,24 @@
           "branch": null,
           "revision": "fa1f25f296a766e5a789c4dacd4798dea798b2c2",
           "version": "1.22.1"
+        }
+      },
+      {
+        "package": "Lightbox",
+        "repositoryURL": "https://github.com/jerometonnelier/Lightbox",
+        "state": {
+          "branch": "master",
+          "revision": "a07de07adbdd89860af2abfd3435d99f09bd7bff",
+          "version": null
+        }
+      },
+      {
+        "package": "Lottie",
+        "repositoryURL": "https://github.com/airbnb/lottie-ios",
+        "state": {
+          "branch": null,
+          "revision": "b3c60ba1716baab6faeeb217d8ce1da336f92718",
+          "version": "3.2.1"
         }
       },
       {
@@ -215,6 +260,15 @@
           "branch": null,
           "revision": "d458564516e5676af9c70b4f4b2a9178294f1bc6",
           "version": "5.0.1"
+        }
+      },
+      {
+        "package": "SwiftDate",
+        "repositoryURL": "https://github.com/malcommac/SwiftDate",
+        "state": {
+          "branch": null,
+          "revision": "6190d0cefff3013e77ed567e6b074f324e5c5bf5",
+          "version": "6.3.1"
         }
       }
     ]
