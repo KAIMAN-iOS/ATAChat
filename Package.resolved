@@ -56,15 +56,6 @@
         }
       },
       {
-        "package": "Cache",
-        "repositoryURL": "https://github.com/hyperoslo/Cache",
-        "state": {
-          "branch": "master",
-          "revision": "520b1afd229e25051878c65ce1e780628ea43b4d",
-          "version": null
-        }
-      },
-      {
         "package": "EasyNotificationBadge",
         "repositoryURL": "https://github.com/Minitour/EasyNotificationBadge",
         "state": {
@@ -128,15 +119,6 @@
         }
       },
       {
-        "package": "Imaginary",
-        "repositoryURL": "https://github.com/hyperoslo/Imaginary",
-        "state": {
-          "branch": "master",
-          "revision": "5da646269754856f60ae463652858f64dfe4d4e5",
-          "version": null
-        }
-      },
-      {
         "package": "InputBarAccessoryView",
         "repositoryURL": "https://github.com/nathantannar4/InputBarAccessoryView",
         "state": {
@@ -179,15 +161,6 @@
           "branch": null,
           "revision": "fa1f25f296a766e5a789c4dacd4798dea798b2c2",
           "version": "1.22.1"
-        }
-      },
-      {
-        "package": "Lightbox",
-        "repositoryURL": "https://github.com/jerometonnelier/Lightbox",
-        "state": {
-          "branch": "master",
-          "revision": "a07de07adbdd89860af2abfd3435d99f09bd7bff",
-          "version": null
         }
       },
       {

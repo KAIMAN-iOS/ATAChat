@@ -39,8 +39,6 @@ import SwiftDate
 import StringExtension
 import ColorExtension
 import UIViewControllerExtension
-import Lightbox
-import IQKeyboardManagerSwift
 
 final class ChatViewController: MessagesViewController {
     var conf: ATAConfiguration = ChannelsViewController.conf

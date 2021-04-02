@@ -28,7 +28,6 @@ let package = Package(
         .package(url: "https://github.com/MessageKit/MessageKit", from: "3.5.0"),
         .package(url: "https://github.com/malcommac/SwiftDate", from: "6.3.1"),
         .package(url: "https://github.com/Minitour/EasyNotificationBadge", from: "1.2.5"),
-        .package(url: "https://github.com/jerometonnelier/Lightbox", .branch("master")),
         .package(name: "Lottie", url: "https://github.com/airbnb/lottie-ios", from: "3.2.1"),
     ],
     targets: [
@@ -48,8 +47,8 @@ let package = Package(
                            "MessageKit",
                            "SwiftDate",
                            "EasyNotificationBadge",
-                           "Lightbox",
-                           "Lottie"])
+                           "Lottie",
+                           "KExtensions"])
         
     ]
 )
