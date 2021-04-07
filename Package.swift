@@ -29,6 +29,7 @@ let package = Package(
         .package(url: "https://github.com/malcommac/SwiftDate", from: "6.3.1"),
         .package(url: "https://github.com/Minitour/EasyNotificationBadge", from: "1.2.5"),
         .package(name: "Lottie", url: "https://github.com/airbnb/lottie-ios", from: "3.2.1"),
+        .package(url: "https://github.com/hyperoslo/Lightbox", .branch("master")),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -48,6 +49,7 @@ let package = Package(
                            "SwiftDate",
                            "EasyNotificationBadge",
                            "Lottie",
+                           "Lightbox",
                            "KExtensions"])
         
     ]
