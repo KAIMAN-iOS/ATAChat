@@ -97,7 +97,6 @@ final class ChatViewController: MessagesViewController {
         if channel.users.count == 2 {
             listenForRead()
         }
-        IQKeyboardManager.shared.enable = false
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -127,7 +126,6 @@ final class ChatViewController: MessagesViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         ChatReadStateController.shared.resetUnreadCount(for: user.chatId, channel: channel)
-        IQKeyboardManager.shared.enable = true
     }
     
     override func viewDidLoad() {
