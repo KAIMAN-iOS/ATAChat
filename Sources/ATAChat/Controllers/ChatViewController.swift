@@ -327,7 +327,7 @@ final class ChatViewController: MessagesViewController {
             return
         }
         
-        guard let scaledImage = image.scaledToSafeUploadSize, let data = scaledImage.jpegData(compressionQuality: 0.4) else {
+        guard let scaledImage = image.scaledToSafeUploadSize, let data = scaledImage.jpegData(compressionQuality: 0.7) else {
             completion(nil)
             return
         }
