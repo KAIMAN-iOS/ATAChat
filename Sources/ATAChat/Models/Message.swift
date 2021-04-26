@@ -50,8 +50,8 @@ extension CodableImage: MediaItem {
 
 struct Message: MessageKit.MessageType {
     var kind: MessageKind {
-        if let image = image, let doc = CodableImage(image) {
-            return .photo(doc)
+        if let image = image {
+            return .photo(CodableImage(image))
         } else {
             return .text(content)
         }
