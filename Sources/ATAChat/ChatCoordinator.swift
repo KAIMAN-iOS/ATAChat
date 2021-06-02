@@ -9,28 +9,40 @@ import UIKit
 import KCoordinatorKit
 import ATAConfiguration
 import Lottie
+import MessageKit
+import FirebaseFirestore
 
 protocol ChatCoordinatorDelegate: NSObjectProtocol {
     func show(channel: Channel)
 }
+// if one wnat to override the Message Cells or detectors, use this delegate
+public protocol ChatMessageDelegate: NSObjectProtocol {
+    func messageForDocument(_ doc: QueryDocumentSnapshot) -> Message?
+    // returns wether the delegate handled the tap or not
+    func didTapMessage(for item: Message) -> Bool
+}
+
 public enum Mode { case driver, passenger }
 
 public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
     dynamic var channelController: ChannelsViewController!
     var currentUser: ChatUser!
     var channelId: String?
+    var chatMessageDelegate: ChatMessageDelegate?
     public init(router: RouterType,
                 currentUser: ChatUser,
                 channelId: String? = nil,
                 mode: Mode = .driver,
                 groups: [AlertGroupable] = [],
                 conf: ATAConfiguration,
+                chatMessageDelegate: ChatMessageDelegate? = nil,
                 emojiAnimation: Animation,
                 noChannelAnimation: Animation) {
         super.init(router: router)
         ChannelsViewController.conf = conf
         self.currentUser = currentUser
         self.channelId = channelId
+        self.chatMessageDelegate = chatMessageDelegate
         channelController = ChannelsViewController.create(currentUser: currentUser,
                                                           groups: groups,
                                                           mode: mode,
@@ -74,6 +86,7 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
 extension ChatCoordinator: ChatCoordinatorDelegate {
     func show(channel: Channel) {
         let ctrl = ChatViewController(user: currentUser, channel: channel)
+        ctrl.chatMessageDelegate = self.chatMessageDelegate
         router.push(ctrl, animated: true, completion: nil)
     }
 }

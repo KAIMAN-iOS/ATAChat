@@ -81,7 +81,7 @@ final class ChatViewController: MessagesViewController {
     var avatars: [String: UIImage] = [:]
     // used for read/distributed for one to one discussions
     var lastReadDate: Date?
-    
+    var chatMessageDelegate: ChatMessageDelegate?
     
     deinit {
         print("💀 DEINIT \(URL(fileURLWithPath: #file).lastPathComponent)")
@@ -258,7 +258,7 @@ final class ChatViewController: MessagesViewController {
     
     // MARK: - Helpers
     private func save(_ message: Message) {
-        reference?.addDocument(data: message.representation) { [weak self] error in
+        reference?.addDocument(data: message.representation) { error in
             if let error = error {
                 print("Error sending message: \(error.localizedDescription)")
                 return
@@ -290,13 +290,13 @@ final class ChatViewController: MessagesViewController {
     }
     
     private func handleDocumentChange(_ change: DocumentChange) {
-        guard var message = Message(document: change.document) else {
+        guard var message = chatMessageDelegate?.messageForDocument(change.document) ?? Message(document: change.document) else {
             return
         }
         
         switch change.type {
         case .added:
-            if let url = message.downloadURL {
+            if let url = message.imageURL {
                 downloadImage(at: url) { [weak self] image in
                     guard let self = self else { return }
                     guard let image = image else {
@@ -371,7 +371,7 @@ final class ChatViewController: MessagesViewController {
             }
             
             var message = Message(user: self.user, image: image)
-            message.downloadURL = url
+            message.imageURL = url
             self.save(message)
             self.messagesCollectionView.scrollToLastItem()
         }
@@ -409,6 +409,15 @@ extension ChatViewController: MessageCellDelegate {
             present(controller, animated: true, completion: nil)
             
         default: ()
+        }
+    }
+    
+    func didTapMessage(in cell: MessageCollectionViewCell) {
+        guard let indexPath = messagesCollectionView.indexPath(for: cell) else { return }
+        let message = messages[indexPath.section]
+        var handled = false
+        if let del = chatMessageDelegate {
+            handled = del.didTapMessage(for: message)
         }
     }
 }

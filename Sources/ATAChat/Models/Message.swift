@@ -32,9 +32,9 @@ import FirebaseFirestore
 import UIKit
 import ImageExtension
 
-struct Sender: SenderType {
-    var senderId: String
-    var displayName: String
+public struct Sender: SenderType {
+    public var senderId: String
+    public var displayName: String
 }
 
 struct AvatarDisplay {
@@ -48,33 +48,37 @@ extension CodableImage: MediaItem {
     public var size: CGSize { CGSize(width: 1200, height: 1200) }
 }
 
-struct Message: MessageKit.MessageType {
-    var kind: MessageKind {
+public struct Message: MessageKit.MessageType {
+    public var kind: MessageKind {
         if let image = image {
             return .photo(CodableImage(image))
+        } else if let kind = customKind {
+            return kind
         } else {
             return .text(content)
         }
     }
-    let id: String?
-    let content: String
-    let sentDate: Date
-    let sender: SenderType
-    var messageId: String {
+    public var customKind: MessageKind?
+    public let id: String?
+    public let content: String
+    public let sentDate: Date
+    public let sender: SenderType
+    public var messageId: String {
         return id ?? UUID().uuidString
     }
     
-    var image: UIImage? = nil
-    var downloadURL: URL? = nil
+    public var image: UIImage? = nil
+    public var imageURL: URL? = nil
+    public var linkURL: URL? = nil
     
-    init(user: ChatUser, content: String) {
+    public init(user: ChatUser, content: String) {
         sender = Sender(senderId: user.chatId, displayName: user.displayName)
         self.content = content
         sentDate = Date()
         id = nil
     }
     
-    init(user: ChatUser, image: UIImage) {
+    public init(user: ChatUser, image: UIImage) {
         sender = Sender(senderId: user.chatId, displayName: user.displayName)
         self.image = image
         content = ""
@@ -82,7 +86,16 @@ struct Message: MessageKit.MessageType {
         id = nil
     }
     
-    init?(document: QueryDocumentSnapshot) {
+    public init(id: String, senderId: String, displayName: String, content: String, linkURL: URL, sentDate: Date, customKind: MessageKind) {
+        self.id = id
+        self.sender = Sender(senderId: senderId, displayName: displayName)
+        self.content = content
+        self.linkURL = linkURL
+        self.sentDate = sentDate
+        self.customKind = customKind
+    }
+    
+    public init?(document: QueryDocumentSnapshot) {
         let data = document.data()
         
         guard let sentDate = data["sentAt"] as? Timestamp else {
@@ -98,9 +111,9 @@ struct Message: MessageKit.MessageType {
         
         if let content = data["text"] as? String {
             self.content = content
-            downloadURL = nil
+            imageURL = nil
         } else if let urlString = data["url"] as? String, let url = URL(string: urlString) {
-            downloadURL = url
+            imageURL = url
             content = ""
         } else {
             return nil
@@ -118,7 +131,7 @@ extension Message: DatabaseRepresentation {
             "senderName": sender.displayName
         ]
         
-        if let url = downloadURL {
+        if let url = imageURL {
             rep["url"] = url.absoluteString
         } else {
             rep["text"] = content
@@ -131,11 +144,11 @@ extension Message: DatabaseRepresentation {
 
 extension Message: Comparable {
     
-    static func == (lhs: Message, rhs: Message) -> Bool {
+    public static func == (lhs: Message, rhs: Message) -> Bool {
         return lhs.id == rhs.id
     }
     
-    static func < (lhs: Message, rhs: Message) -> Bool {
+    public static func < (lhs: Message, rhs: Message) -> Bool {
         return lhs.sentDate < rhs.sentDate
     }
     
