@@ -545,7 +545,7 @@ extension ChatViewController: MessagesDataSource {
                                         .displayName
                                         .uppercased()
                                         .components(separatedBy: " ")
-                                        .reduce("") { ($0 == "" ? "" : "\($0.first!)") + "\($1.first!)" }))
+                                        .reduce("") { ($0 == "" ? "" : "\($0.first ?? "-")") + "\($1.first ?? "-")" }))
         avatarView.backgroundColor = conf.palette.inactive
         avatarView.placeholderTextColor = conf.palette.textOnPrimary
     }
