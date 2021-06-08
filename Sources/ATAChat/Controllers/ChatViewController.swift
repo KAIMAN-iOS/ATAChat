@@ -69,6 +69,7 @@ final class ChatViewController: MessagesViewController {
     private let user: ChatUser
     private let channel: Channel
     lazy var refreshControl = UIRefreshControl()
+    public var maxSize: Double = 1200
     public var showAvatars: Bool = true  {
         didSet {
             guard showAvatars == false else { return }
@@ -379,7 +380,7 @@ final class ChatViewController: MessagesViewController {
     
     private func downloadImage(at url: URL, completion: @escaping (UIImage?) -> Void) {
         let ref = Storage.storage().reference(forURL: url.absoluteString)
-        let megaByte = Int64(1 * 1024 * 1024)
+        let megaByte = Int64(1 * 2048 * 2048)
         
         ref.getData(maxSize: megaByte) { data, error in
             guard let imageData = data else {
@@ -599,7 +600,7 @@ extension ChatViewController: UIImagePickerControllerDelegate, UINavigationContr
         picker.dismiss(animated: true, completion: nil)
         
         if let asset = info[.phAsset] as? PHAsset { // 1
-            let size = CGSize(width: 1500, height: 1500)
+            let size = CGSize(width: maxSize, height: maxSize)
             PHImageManager.default().requestImage(for: asset, targetSize: size, contentMode: .aspectFit, options: nil) { [weak self] result, info in
                 guard let image = result,
                       let info = info,
@@ -610,7 +611,7 @@ extension ChatViewController: UIImagePickerControllerDelegate, UINavigationContr
                 self?.sendPhoto(image)
             }
         } else if let image = info[.originalImage] as? UIImage { // 2
-            sendPhoto(image.scalePreservingAspectRatio(targetSize: CGSize(width: 1500, height: 1500)))
+            sendPhoto(image.scalePreservingAspectRatio(targetSize: CGSize(width: maxSize, height: maxSize)))
         }
     }
     
