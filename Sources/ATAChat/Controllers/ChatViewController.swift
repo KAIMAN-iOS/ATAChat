@@ -40,6 +40,7 @@ import StringExtension
 import ColorExtension
 import UIViewControllerExtension
 import Lightbox
+import Nuke
 
 final class ChatViewController: MessagesViewController {
     var conf: ATAConfiguration = ChannelsViewController.conf
@@ -298,15 +299,18 @@ final class ChatViewController: MessagesViewController {
         switch change.type {
         case .added:
             if let url = message.imageURL {
+                self.insertNewMessage(message)
+                self.messagesCollectionView.scrollToLastItem()
+                
                 downloadImage(at: url) { [weak self] image in
                     guard let self = self else { return }
                     guard let image = image else {
                         return
                     }
-                    
                     message.image = image
+                    self.messages.removeAll(where: { $0 == message })
                     self.insertNewMessage(message)
-                    self.messagesCollectionView.scrollToLastItem()
+                    self.messagesCollectionView.reloadData()
                 }
             } else {
                 insertNewMessage(message)
@@ -379,16 +383,29 @@ final class ChatViewController: MessagesViewController {
     }
     
     private func downloadImage(at url: URL, completion: @escaping (UIImage?) -> Void) {
-        let ref = Storage.storage().reference(forURL: url.absoluteString)
-        let megaByte = Int64(1 * 2048 * 2048)
-        
-        ref.getData(maxSize: megaByte) { data, error in
-            guard let imageData = data else {
-                completion(nil)
+        DispatchQueue.main.async {
+            if let cache = DataLoader.sharedUrlCache.cachedResponse(for: ImageRequest(url: url).urlRequest),
+               let image = UIImage(data: cache.data) {
+                completion(image)
                 return
             }
-            
-            completion(UIImage(data: imageData))
+            ImagePipeline
+                .shared
+                .loadImage(with: ImageRequest(url: url)) { result in
+                    switch result {
+                    case .success(let response):
+                        DataLoader.sharedUrlCache.cachedResponse(for: ImageRequest(url: url).urlRequest)
+                        completion(response.image)
+                        
+                    case .failure:
+                        if let cache = DataLoader.sharedUrlCache.cachedResponse(for: ImageRequest(url: url).urlRequest),
+                           let image = UIImage(data: cache.data) {
+                            completion(image)
+                        } else {
+                            completion(nil)
+                        }
+                    }
+                }
         }
     }
 }
