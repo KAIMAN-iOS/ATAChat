@@ -299,6 +299,7 @@ final class ChatViewController: MessagesViewController {
         switch change.type {
         case .added:
             if let url = message.imageURL {
+                message.image = UIImage(named: "defaultPicture", in: .module, with: nil)
                 self.insertNewMessage(message)
                 self.messagesCollectionView.scrollToLastItem()
                 
