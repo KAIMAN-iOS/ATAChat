@@ -300,6 +300,7 @@ final class ChatViewController: MessagesViewController {
         case .added:
             if let url = message.imageURL {
                 message.image = UIImage(named: "defaultPicture", in: .module, with: nil)
+                message.isTemporaryImage = true
                 self.insertNewMessage(message)
                 self.messagesCollectionView.scrollToLastItem()
                 
@@ -449,7 +450,7 @@ extension ChatViewController: MessagesDisplayDelegate {
     }
     
     func backgroundColor(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> UIColor {
-        guard messages[indexPath.section].isTemporaryImage == false else {
+        guard messages[indexPath.section].isTemporaryImage ?? false == false else {
             return conf.palette.lightGray
         }
         return isFromCurrentSender(message: message) ? conf.palette.primary : conf.palette.secondary
