@@ -309,6 +309,7 @@ final class ChatViewController: MessagesViewController {
                         return
                     }
                     message.image = image
+                    message.isTemporaryImage = false
                     self.messages.removeAll(where: { $0 == message })
                     self.insertNewMessage(message)
                     self.messagesCollectionView.reloadData()
@@ -434,9 +435,8 @@ extension ChatViewController: MessageCellDelegate {
     func didTapMessage(in cell: MessageCollectionViewCell) {
         guard let indexPath = messagesCollectionView.indexPath(for: cell) else { return }
         let message = messages[indexPath.section]
-        var handled = false
         if let del = chatMessageDelegate {
-            handled = del.didTapMessage(for: message)
+            let _ = del.didTapMessage(for: message)
         }
     }
 }
@@ -449,6 +449,9 @@ extension ChatViewController: MessagesDisplayDelegate {
     }
     
     func backgroundColor(for message: MessageType, at indexPath: IndexPath, in messagesCollectionView: MessagesCollectionView) -> UIColor {
+        guard messages[indexPath.section].isTemporaryImage == false else {
+            return conf.palette.lightGray
+        }
         return isFromCurrentSender(message: message) ? conf.palette.primary : conf.palette.secondary
     }
     

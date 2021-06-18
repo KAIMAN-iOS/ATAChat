@@ -70,6 +70,7 @@ public struct Message: MessageKit.MessageType {
     public var image: UIImage? = nil
     public var imageURL: URL? = nil
     public var linkURL: URL? = nil
+    public var isTemporaryImage: Bool = true
     
     public init(user: ChatUser, content: String) {
         sender = Sender(senderId: user.chatId, displayName: user.displayName)
