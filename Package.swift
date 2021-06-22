@@ -22,6 +22,7 @@ let package = Package(
                    from: "7.6.0"),
         
         .package(url: "https://github.com/jerometonnelier/KCoordinatorKit", .branch("master")),
+        .package(url: "https://github.com/jerometonnelier/ATAViews", .branch("master")),
         .package(url: "https://github.com/jerometonnelier/KExtensions", .branch("master")),
         .package(url: "https://github.com/jerometonnelier/ActionButton", .branch("master")),
         .package(url: "https://github.com/jerometonnelier/ATAConfiguration", .branch("master")),
@@ -43,6 +44,7 @@ let package = Package(
                            .product(name: "FirebaseDatabase", package: "Firebase"),
                            .product(name: "FirebaseMessaging", package: "Firebase"),
                            "KCoordinatorKit",
+                           "ATAViews",
                            "ActionButton",
                            "ATAConfiguration",
                            "MessageKit",

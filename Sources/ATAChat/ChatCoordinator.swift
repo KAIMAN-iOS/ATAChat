@@ -53,6 +53,11 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
     }
     public override func toPresentable() -> UIViewController { channelController }
     
+    deinit {
+        print("💀 DEINIT \(URL(fileURLWithPath: #file).lastPathComponent)")
+        channelController.stopListenning()
+    }
+    
     public func startAndPush(completion: @escaping (() -> Void)) {
         guard let channelId = self.channelId else {
             showChannels(animated: true, completion: completion)

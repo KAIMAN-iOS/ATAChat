@@ -37,6 +37,8 @@ import LabelExtension
 import TableViewExtension
 import EasyNotificationBadge
 import Lottie
+import UIViewExtension
+import Combine
 
 extension Mode {
     var noChannelTitle: String {
@@ -109,11 +111,11 @@ class ChannelsViewController: UITableViewController {
     private var groups: [AlertGroupable] = []
     private var noChannelAnimation: Animation!
     private var emojiAnimation: Animation!
+    private var subscriptions = Set<AnyCancellable>()
     
     deinit {
         print("💀 DEINIT \(URL(fileURLWithPath: #file).lastPathComponent)")
         channelListener?.remove()
-        ChatReadStateController.shared.stopListenning(from: self)
     }
     
     static func create(currentUser: ChatUser,
@@ -144,11 +146,31 @@ class ChannelsViewController: UITableViewController {
                 return
             }
             
-            snapshot.documentChanges.forEach { change in
-                self.handleDocumentChange(change)
+            snapshot.documentChanges.forEach { [weak self] change in
+                self?.handleDocumentChange(change)
             }
         }
-        ChatReadStateController.shared.startListenning(for: currentUser.chatId, delegate: self)
+        
+        ChatReadStateController
+            .shared
+            .startListenning(for: currentUser.chatId)
+            .receive(on: DispatchQueue.main)
+            .sink { unreads in
+                unreads.forEach { [weak self] unread in
+                    self?.updateRead(unread)
+                }
+            }
+            .store(in: &subscriptions)
+    }
+    
+    private func updateRead(_ data: ChatRead) {
+        guard let channel = cellTypes.flatMap({ $0.channels }).filter({ $0.id == data.channelId }).first else { return }
+        channel.update(data.count)
+        updateChannelInTable(channel)
+    }
+    
+    func stopListenning() {
+        channelListener?.remove()
     }
     
     var emojiAnimationView: AnimationView?
@@ -274,7 +296,8 @@ class ChannelsViewController: UITableViewController {
         self.channels.removeAll(where: { $0 == channel })
         self.channels.append(channel)
         update(cellType, with: channels)
-        tableView.reloadRows(at: [IndexPath(row: index, section: cellTypes.firstIndex(of: cellType) ?? 0)], with: .automatic)
+//        tableView.reloadRows(at: [IndexPath(row: index, section: cellTypes.firstIndex(of: cellType) ?? 0)], with: .automatic)
+        tableView.reloadData()
     }
     
     private func removeChannelFromTable(_ channel: Channel) {
@@ -336,14 +359,7 @@ extension ChannelsViewController {
         let channel = cellTypes[indexPath.section].channels[indexPath.row]
         cell.configure(channel)
         cell.textLabel?.font = .applicationFont(forTextStyle: .callout)
-        
-        if channel.unreadCount > 0 {
-            cell.imageView?.image = UIImage()
-            cell.imageView?.badge(text: "\(channel.unreadCount)", appearance: BadgeAppearance(font: .applicationFont(forTextStyle: .caption1),
-                                                                                   backgroundColor: ChannelsViewController.conf.palette.primary,
-                                                                                   textColor: ChannelsViewController.conf.palette.textOnPrimary,
-                                                                                   animate: true))
-        }
+        cell.updateUnreadCount(channel.unreadCount)
         return cell
     }
     
@@ -374,13 +390,5 @@ extension ChannelsViewController {
             $0.height.equalTo(1)
         }
         return view
-    }
-}
-
-extension ChannelsViewController: ChatReadStateDelegate {
-    func didupdateRead(_ data: ChatRead) {
-        guard let channel = cellTypes.flatMap({ $0.channels }).filter({ $0.id == data.channelId }).first else { return }
-        channel.update(data.count)
-        updateChannelInTable(channel)
     }
 }

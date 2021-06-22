@@ -41,6 +41,7 @@ import ColorExtension
 import UIViewControllerExtension
 import Lightbox
 import Nuke
+import Combine
 
 final class ChatViewController: MessagesViewController {
     var conf: ATAConfiguration = ChannelsViewController.conf
@@ -88,7 +89,6 @@ final class ChatViewController: MessagesViewController {
     deinit {
         print("💀 DEINIT \(URL(fileURLWithPath: #file).lastPathComponent)")
         messageListener?.remove()
-        ChatReadStateController.shared.stopListenning(from: self)
     }
     
     init(user: ChatUser, channel: Channel) {
@@ -105,9 +105,27 @@ final class ChatViewController: MessagesViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
+    private var subscriptions = Set<AnyCancellable>()
     private func listenForRead() {
         guard let userId = channel.users.filter({ $0 != user.chatId }).first else { return }
-        ChatReadStateController.shared.startListenning(for: userId, delegate: self)
+        ChatReadStateController
+            .shared
+            .startListenning(for: userId)
+            .receive(on: DispatchQueue.main)
+            .sink { unreads in
+                unreads.forEach { [weak self] unread in
+                    self?.updateRead(unread)
+                }
+            }
+            .store(in: &subscriptions)
+    }
+    
+    func updateRead(_ data: ChatRead) {
+        guard data.channelId == channel.id, data.count == 0 else { return }
+        lastReadDate = data.date
+        guard let lastMessage = messages.last,
+              lastMessage.sender.senderId == user.chatId  else { return }
+        messagesCollectionView.reloadItems(at: [IndexPath(row: 0, section: messages.count - 1)])
     }
     
     func downloadAvatars() {
@@ -639,15 +657,5 @@ extension ChatViewController: UIImagePickerControllerDelegate, UINavigationContr
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         picker.dismiss(animated: true, completion: nil)
-    }
-}
-
-extension ChatViewController: ChatReadStateDelegate {
-    func didupdateRead(_ data: ChatRead) {
-        guard data.channelId == channel.id, data.count == 0 else { return }
-        lastReadDate = data.date
-        guard let lastMessage = messages.last,
-              lastMessage.sender.senderId == user.chatId  else { return }
-        messagesCollectionView.reloadItems(at: [IndexPath(row: 0, section: messages.count - 1)])
     }
 }
