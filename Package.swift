@@ -19,7 +19,7 @@ let package = Package(
         .package(name: "Firebase",
                    url: "https://github.com/firebase/firebase-ios-sdk.git",
 //                   .branch("6.34-spm-beta")),
-                   from: "7.6.0"),
+                   from: "8.2.0"),
         
         .package(url: "https://github.com/jerometonnelier/KCoordinatorKit", .branch("master")),
         .package(url: "https://github.com/jerometonnelier/ATAViews", .branch("master")),
