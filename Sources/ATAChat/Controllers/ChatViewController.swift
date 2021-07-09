@@ -84,7 +84,7 @@ final class ChatViewController: MessagesViewController {
     var avatars: [String: UIImage] = [:]
     // used for read/distributed for one to one discussions
     var lastReadDate: Date?
-    var chatMessageDelegate: ChatMessageDelegate?
+    var chatMessageDelegate: ATAChatMessageDelegate?
     
     deinit {
         print("💀 DEINIT \(URL(fileURLWithPath: #file).lastPathComponent)")

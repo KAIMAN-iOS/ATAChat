@@ -16,7 +16,7 @@ protocol ChatCoordinatorDelegate: NSObjectProtocol {
     func show(channel: Channel)
 }
 // if one wnat to override the Message Cells or detectors, use this delegate
-public protocol ChatMessageDelegate: NSObjectProtocol {
+public protocol ATAChatMessageDelegate: AnyObject {
     func messageForDocument(_ doc: QueryDocumentSnapshot) -> Message?
     // returns wether the delegate handled the tap or not
     func didTapMessage(for item: Message) -> Bool
@@ -28,14 +28,14 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
     dynamic var channelController: ChannelsViewController!
     var currentUser: ChatUser!
     var channelId: String?
-    var chatMessageDelegate: ChatMessageDelegate?
+    var chatMessageDelegate: ATAChatMessageDelegate?
     public init(router: RouterType,
                 currentUser: ChatUser,
                 channelId: String? = nil,
                 mode: Mode = .driver,
                 groups: [AlertGroupable] = [],
                 conf: ATAConfiguration,
-                chatMessageDelegate: ChatMessageDelegate? = nil,
+                chatMessageDelegate: ATAChatMessageDelegate? = nil,
                 emojiAnimation: Animation,
                 noChannelAnimation: Animation) {
         super.init(router: router)
