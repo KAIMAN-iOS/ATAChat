@@ -320,7 +320,7 @@ class ChannelsViewController: UITableViewController {
         if channels.count == 0 {
             loadEmojiView()
         }
-        channel.isAlertGroup = groups.compactMap({ $0.groupId }).contains(channel.id)
+        channel.isAlertGroup = groups.filter({ $0.isAlertGroup }).compactMap({ $0.groupId }).contains(channel.id)
         channel.unreadCount = ChatReadStateController.shared.getUnreadCount(channelId: channel.id ?? "", userId: currentUser.chatId) ?? 0
         
         switch change.type {

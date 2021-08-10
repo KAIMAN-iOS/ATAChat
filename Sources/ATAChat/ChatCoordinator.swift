@@ -58,12 +58,12 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
         channelController.stopListenning()
     }
     
-    public func startAndPush(completion: @escaping (() -> Void)) {
+    public func startAndPush(showChannelsControllers: Bool = false, completion: @escaping (() -> Void)) {
         guard let channelId = self.channelId else {
             showChannels(animated: true, completion: completion)
             return
         }
-        showTargetChannel(channelId: channelId, completion: completion)
+        showTargetChannel(channelId: channelId, showChannelsControllers: showChannelsControllers, completion: completion)
     }
     
     func showChannels(animated: Bool, completion: @escaping (() -> Void)) {
@@ -71,16 +71,22 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
     }
     
     var channelObserver: NSKeyValueObservation?
-    func showTargetChannel(channelId: String, completion: @escaping (() -> Void)) {
+    func showTargetChannel(channelId: String, showChannelsControllers: Bool = false, completion: @escaping (() -> Void)) {
         guard let channel = channelController.cellTypes.flatMap({ $0.channels }).filter({ $0.id == channelId }).first,
               channelObserver == nil else {
             channelObserver = channelController.observe(\.channels, options: [.new], changeHandler: { [weak self] (controller, change) in
                 guard let self = self else { return }
                 guard let channel = change.newValue?.first(where: { $0.id == channelId }) else { return }
-                self.showChannels(animated: false, completion: completion)
+                if showChannelsControllers == false {
+                    self.showChannels(animated: false, completion: completion)
+                }
                 self.show(channel: channel)
                 self.channelObserver = nil
             })
+            
+            if showChannelsControllers {
+                showChannels(animated: true, completion: completion)
+            }
             return
         }
         showChannels(animated: false, completion: completion)

@@ -99,6 +99,7 @@ final class ChatViewController: MessagesViewController {
         if channel.users.count == 2 {
             listenForRead()
         }
+        extendedLayoutIncludesOpaqueBars = false
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -262,6 +263,8 @@ final class ChatViewController: MessagesViewController {
         snapshot.documentChanges.forEach { change in
             self.handleDocumentChange(change)
         }
+        messagesCollectionView.reloadData()
+        scrollToBottom()
         
         guard let lastSnapshot = snapshot.documents.last else {
             // The collection is empty.
@@ -288,25 +291,17 @@ final class ChatViewController: MessagesViewController {
     }
     
     private func scrollToBottom() {
-        messagesCollectionView.scrollToLastItem(at: .top)
+        DispatchQueue.main.async { [weak self] in
+            self?.messagesCollectionView.scrollToLastItem(at: .top)
+        }
     }
     
     private func insertNewMessage(_ message: Message) {
         guard !messages.contains(message) else {
             return
         }
-        
         messages.append(message)
         messages.sort()
-        
-//        let isLatestMessage = messages.firstIndex(of: message) == (messages.count - 1)
-//        let shouldScrollToBottom = messagesCollectionView.isAtBottom && isLatestMessage
-        
-        messagesCollectionView.reloadData()
-        
-        DispatchQueue.main.async { [weak self] in
-            self?.scrollToBottom()
-        }
     }
     
     private func handleDocumentChange(_ change: DocumentChange) {
