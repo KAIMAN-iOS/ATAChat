@@ -34,6 +34,7 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
                 channelId: String? = nil,
                 mode: Mode = .driver,
                 groups: [AlertGroupable] = [],
+                groupTypes: [AlertGroupTypable],
                 conf: ATAConfiguration,
                 chatMessageDelegate: ATAChatMessageDelegate? = nil,
                 emojiAnimation: Animation,
@@ -45,6 +46,7 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
         self.chatMessageDelegate = chatMessageDelegate
         channelController = ChannelsViewController.create(currentUser: currentUser,
                                                           groups: groups,
+                                                          groupTypes: groupTypes,
                                                           mode: mode,
                                                           coordinatorDelegate: self,
                                                           emojiAnimation: emojiAnimation,
@@ -72,11 +74,11 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
     
     var channelObserver: NSKeyValueObservation?
     func showTargetChannel(channelId: String, showChannelsControllers: Bool = false, completion: @escaping (() -> Void)) {
-        guard let channel = channelController.cellTypes.flatMap({ $0.channels }).filter({ $0.id == channelId }).first,
+        guard let channel = channelController.sections.flatMap({ $0.channels }).filter({ $0.id == channelId }).first,
               channelObserver == nil else {
-            channelObserver = channelController.observe(\.channels, options: [.new], changeHandler: { [weak self] (controller, change) in
+            channelObserver = channelController.observe(\.sections, options: [.new], changeHandler: { [weak self] (controller, change) in
                 guard let self = self else { return }
-                guard let channel = change.newValue?.first(where: { $0.id == channelId }) else { return }
+                guard let channel = change.newValue?.flatMap({$0.channels}).first(where: { $0.id == channelId }) else { return }
                 if showChannelsControllers == false {
                     self.showChannels(animated: false, completion: completion)
                 }

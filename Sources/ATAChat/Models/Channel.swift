@@ -33,7 +33,7 @@ import FirebaseFirestore
     let name: String
     let users: [String]
     var unreadCount: Int = 0
-    var isAlertGroup: Bool = false
+//    var isAlertGroup: Bool = false
     
     func update(_ unread: Int) {
         unreadCount = unread
@@ -81,7 +81,7 @@ extension Channel: Comparable {
     }
     
     static func < (lhs: Channel, rhs: Channel) -> Bool {
-        return lhs.name < rhs.name
+        return lhs.name.lowercased() < rhs.name.lowercased()
     }
     
 }

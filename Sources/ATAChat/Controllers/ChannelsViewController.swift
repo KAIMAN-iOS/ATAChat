@@ -50,8 +50,14 @@ extension Mode {
 }
 
 public protocol AlertGroupable {
-    var isAlertGroup: Bool { get }
     var groupId: String { get }
+    var groupTypeId: Int { get }
+}
+
+public protocol AlertGroupTypable {
+    var groupTypeId: Int { get }
+    var groupTypeName: String { get }
+    var sortIndex: Int { get }
 }
 
 public protocol ChatUser {
@@ -66,33 +72,24 @@ protocol Channelable {
 
 class ChannelsViewController: UITableViewController {
     var mode: Mode!
-    enum CellType: Equatable, Comparable {
-        static func == (lhs: CellType, rhs: CellType) -> Bool {
-            switch (lhs, rhs) {
-            case (.alert, .alert): return true
-            case (.default, .default): return true
-            default: return false
-            }
+    class Section: NSObject, Comparable {
+        static func == (lhs: Section, rhs: Section) -> Bool { lhs.groupTypeName == rhs.groupTypeName }
+        override func isEqual(_ object: Any?) -> Bool {
+            guard let rhs = object as? Section else { return false }
+            return rhs.groupTypeName == groupTypeName
         }
-        static func < (lhs: CellType, rhs: CellType) -> Bool {
-            switch (lhs, rhs) {
-            case (.alert, .default): return false
-            default: return true
-            }
-        }
+        static func < (lhs: Section, rhs: Section) -> Bool { lhs.groupTypeName == rhs.groupTypeName }
+        var channels: [Channel] = []
+        var groupTypeName: String
         
-        case alert(_: [Channel])
-        case `default`(_: [Channel])
-        
-        var channels: [Channel] {
-            switch self {
-            case .alert(let channels): return channels
-            case .default(let channels): return channels
-            }
+        init(channels: [Channel] = [],
+             groupTypeName: String) {
+            self.channels = channels
+            self.groupTypeName = groupTypeName
         }
     }
-    var cellTypes: [CellType] = []
-    @objc dynamic var channels: [Channel] = []
+    @objc dynamic var sections: [Section] = []
+    //@objc dynamic var channels: [Channel] = []
     static var conf: ATAConfiguration!
     private let toolbarLabel: UILabel = {
         let label = UILabel()
@@ -109,6 +106,7 @@ class ChannelsViewController: UITableViewController {
 //    private var channels = [Channel]()
     private var currentUser: ChatUser!
     private var groups: [AlertGroupable] = []
+    private var groupTypes: [AlertGroupTypable] = []
     private var noChannelAnimation: Animation!
     private var emojiAnimation: Animation!
     private var subscriptions = Set<AnyCancellable>()
@@ -120,6 +118,7 @@ class ChannelsViewController: UITableViewController {
     
     static func create(currentUser: ChatUser,
                        groups: [AlertGroupable],
+                       groupTypes: [AlertGroupTypable],
                        mode: Mode = .driver,
                        coordinatorDelegate: ChatCoordinatorDelegate,
                        emojiAnimation: Animation,
@@ -128,6 +127,7 @@ class ChannelsViewController: UITableViewController {
         ctrl.currentUser = currentUser
         ctrl.mode = mode
         ctrl.groups = groups
+        ctrl.groupTypes = groupTypes
         ctrl.coordinatorDelegate = coordinatorDelegate
         ctrl.emojiAnimation = emojiAnimation
         ctrl.noChannelAnimation = noChannelAnimation
@@ -137,7 +137,7 @@ class ChannelsViewController: UITableViewController {
     }
     
     func startListenning() {
-        guard channelListener == nil else { return }
+        guard channelListener == nil, currentUser.chatId.isEmpty == false else { return }
         channelListener = channelReference
             .whereField("user", arrayContains: currentUser.chatId)
             .addSnapshotListener { querySnapshot, error in
@@ -164,7 +164,7 @@ class ChannelsViewController: UITableViewController {
     }
     
     private func updateRead(_ data: ChatRead) {
-        guard let channel = cellTypes.flatMap({ $0.channels }).filter({ $0.id == data.channelId }).first else { return }
+        guard let channel = sections.flatMap({ $0.channels }).filter({ $0.id == data.channelId }).first else { return }
         channel.update(data.count)
         updateChannelInTable(channel)
     }
@@ -237,7 +237,7 @@ class ChannelsViewController: UITableViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        if channels.isEmpty {
+        if sections.isEmpty {
             loadNoChannelView()
         } else if emojiAnimationView != nil {
             loadEmojiView()
@@ -249,67 +249,50 @@ class ChannelsViewController: UITableViewController {
     }
     
     // MARK: - Helpers
-    func cellType(for channel: Channel) -> CellType {
-        var cellType: CellType? = cellTypes.filter({ $0 == (channel.isAlertGroup ? CellType.alert([]) : CellType.default([])) }).first
-        if cellType == nil {
-            cellType = channel.isAlertGroup ? CellType.alert([]) : CellType.default([])
+    func section(for group: String) -> Section {
+        guard let section = sections.first(where: { $0.groupTypeName == group }) else {
+            let section = Section(groupTypeName: group)
+            sections.append(section)
+            return section
         }
-        return cellType!
+        return section
     }
-    
-    func update(_ cellType: CellType, with channels: [Channel]) {
-        switch cellType {
-        case .alert:
-            cellTypes.removeAll(where: { $0 == CellType.alert([]) })
-            cellTypes.append(CellType.alert(channels.sorted()))
-            
-        case .default:
-            cellTypes.removeAll(where: { $0 == CellType.default([]) })
-            cellTypes.append(CellType.default(channels.sorted()))
-        }
-        cellTypes.sort()
+    func section(for channel: Channel) -> Section? {
+        guard let group = groups.first(where: { $0.groupId == channel.id }),
+              let name = groupTypes.first(where: { $0.groupTypeId == group.groupTypeId }) else { return nil }
+        return section(for: name.groupTypeName)
     }
     
     private func addChannelToTable(_ channel: Channel) {
-        let cellType = self.cellType(for: channel)
-        var channels = cellType.channels
-        guard !channels.contains(channel) else {
+        guard let section = self.section(for: channel) else { return }
+        guard !section.channels.contains(channel) else {
             return
         }
-        channels.append(channel)
-        self.channels.append(channel)
-        update(cellType, with: channels)
-        
-        guard channels.firstIndex(of: channel) != nil else {
+        section.channels.append(channel)
+        section.channels.sort()
+        guard section.channels.firstIndex(of: channel) != nil else {
             return
         }
         tableView.reloadData()
     }
     
     private func updateChannelInTable(_ channel: Channel) {
-        let cellType = self.cellType(for: channel)
-        var channels = cellType.channels
-        guard let index = channels.firstIndex(of: channel) else {
+        guard let section = self.section(for: channel) else { return }
+        guard let index = section.channels.firstIndex(of: channel) else {
             return
         }
-        channels[index] = channel
-        self.channels.removeAll(where: { $0 == channel })
-        self.channels.append(channel)
-        update(cellType, with: channels)
+        section.channels[index] = channel
 //        tableView.reloadRows(at: [IndexPath(row: index, section: cellTypes.firstIndex(of: cellType) ?? 0)], with: .automatic)
         tableView.reloadData()
     }
     
     private func removeChannelFromTable(_ channel: Channel) {
-        let cellType = self.cellType(for: channel)
-        var channels = cellType.channels
-        guard let index = channels.firstIndex(of: channel) else {
+        guard let section = self.section(for: channel) else { return }
+        guard let index = section.channels.firstIndex(of: channel) else {
             return
         }
-        channels.remove(at: index)
-        self.channels.removeAll(where: { $0 == channel })
-        update(cellType, with: channels)
-        tableView.deleteRows(at: [IndexPath(row: index, section: cellTypes.firstIndex(of: cellType) ?? 0)], with: .automatic)
+        section.channels.remove(at: index)
+        tableView.deleteRows(at: [IndexPath(row: index, section: sections.firstIndex(of: section) ?? 0)], with: .automatic)
     }
     
     private func handleDocumentChange(_ change: DocumentChange) {
@@ -317,10 +300,10 @@ class ChannelsViewController: UITableViewController {
             return
         }
         noChannelContainer?.isHidden = true
-        if channels.count == 0 {
+        if sections.count == 0 {
             loadEmojiView()
         }
-        channel.isAlertGroup = groups.filter({ $0.isAlertGroup }).compactMap({ $0.groupId }).contains(channel.id)
+//        channel.isAlertGroup = groups.filter({ $0.isAlertGroup }).compactMap({ $0.groupId }).contains(channel.id)
         channel.unreadCount = ChatReadStateController.shared.getUnreadCount(channelId: channel.id ?? "", userId: currentUser.chatId) ?? 0
         
         switch change.type {
@@ -340,15 +323,15 @@ class ChannelsViewController: UITableViewController {
 
 extension ChannelsViewController {
     override func numberOfSections(in tableView: UITableView) -> Int {
-        return cellTypes.count
+        return sections.count
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return cellTypes[section].channels.count
+        return sections[section].channels.count
     }
     
     override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        guard let index = cellTypes.firstIndex(of: .alert([])), section == index else { return 0 }
+//        guard let index = cellTypes.firstIndex(of: .alert([])), section == index else { return 0 }
         return 64
     }
     
@@ -356,7 +339,7 @@ extension ChannelsViewController {
         guard let cell: ChannelCell = tableView.automaticallyDequeueReusableCell(forIndexPath: indexPath) else {
             return UITableViewCell()
         }
-        let channel = cellTypes[indexPath.section].channels[indexPath.row]
+        let channel = sections[indexPath.section].channels[indexPath.row]
         cell.configure(channel)
         cell.textLabel?.font = .applicationFont(forTextStyle: .callout)
         cell.updateUnreadCount(channel.unreadCount)
@@ -364,18 +347,19 @@ extension ChannelsViewController {
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let channel = cellTypes[indexPath.section].channels[indexPath.row]
+        let channel = sections[indexPath.section].channels[indexPath.row]
         coordinatorDelegate.show(channel: channel)
     }
     
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        guard let index = cellTypes.firstIndex(of: .alert([])), section == index else { return nil }
+//        guard let index = cellTypes.firstIndex(of: .alert([])), section == index else { return nil }
         let view = UIView()
+        view.backgroundColor = ChannelsViewController.conf.palette.background
         let label = UILabel()
-        label.set(text: "Alert".bundleLocale().uppercased(), for: .subheadline, textColor: ChannelsViewController.conf.palette.mainTexts)
+        label.set(text: sections[section].groupTypeName.capitalized, for: .headline, traits: [.traitBold], textColor: ChannelsViewController.conf.palette.mainTexts)
         view.addSubview(label)
         label.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(20)
+            make.leading.equalToSuperview().offset(18)
             make.top.equalToSuperview().offset(12)
             make.bottom.equalToSuperview().offset(16)
             make.trailingMargin.equalToSuperview()
