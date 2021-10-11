@@ -35,7 +35,7 @@ public class ChannelController {
         return form
     }()
     
-    public func createRideChannel(ride: OngoingRide) {
+    public func createRideChannel(for ride: OngoingRide) {
         
         guard let driver = ride.driver, let passenger = ride.passenger else {
             return
@@ -56,12 +56,12 @@ public class ChannelController {
         }
     }
     
-    public func deleteRideChannel(rideId: Int) {
+    public func deleteRideChannel(for rideId: Int) {
         channelReference.document("\(Ride.rideChannelPrefix)\(rideId)").delete()
     }
     
-    private func getChatIds(for ids: [Int], completion: @escaping (([Int:String]?) -> Void)) {
-        userReference.whereField("id", in: ids).addSnapshotListener { (querySnapshot, error) in
+    private func getChatIds(for userIds: [Int], completion: @escaping (([Int:String]?) -> Void)) {
+        userReference.whereField("id", in: userIds).addSnapshotListener { (querySnapshot, error) in
             guard let documents = querySnapshot?.documents else {
                 print("No documents")
                 return completion(nil)
