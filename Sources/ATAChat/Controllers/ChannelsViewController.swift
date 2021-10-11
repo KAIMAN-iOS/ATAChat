@@ -39,6 +39,7 @@ import EasyNotificationBadge
 import Lottie
 import UIViewExtension
 import Combine
+import ATACommonObjects
 
 extension Mode {
     var noChannelTitle: String {
@@ -89,7 +90,7 @@ class ChannelsViewController: UITableViewController {
         }
     }
     @objc dynamic var sections: [Section] = []
-    //@objc dynamic var channels: [Channel] = []
+    @objc dynamic var channels: [Channel] = []
     static var conf: ATAConfiguration!
     private let toolbarLabel: UILabel = {
         let label = UILabel()
@@ -252,12 +253,19 @@ class ChannelsViewController: UITableViewController {
     func section(for group: String) -> Section {
         guard let section = sections.first(where: { $0.groupTypeName == group }) else {
             let section = Section(groupTypeName: group)
-            sections.append(section)
+            if (section.groupTypeName == Ride.rideChannelGroupTypeName) {
+                sections.insert(section, at: 0)
+            } else {
+                sections.append(section)
+            }
             return section
         }
         return section
     }
     func section(for channel: Channel) -> Section? {
+        if let channelId = channel.id, channelId.contains(Ride.rideChannelPrefix) {
+            return section(for: Ride.rideChannelGroupTypeName)
+        }
         guard let group = groups.first(where: { $0.groupId == channel.id }),
               let name = groupTypes.first(where: { $0.groupTypeId == group.groupTypeId }) else { return nil }
         return section(for: name.groupTypeName)
@@ -269,6 +277,10 @@ class ChannelsViewController: UITableViewController {
             return
         }
         section.channels.append(channel)
+        guard !channels.contains(channel) else {
+            return
+        }
+        channels.append(channel)
         section.channels.sort()
         guard section.channels.firstIndex(of: channel) != nil else {
             return

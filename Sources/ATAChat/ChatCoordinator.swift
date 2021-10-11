@@ -76,9 +76,9 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
     func showTargetChannel(channelId: String, showChannelsControllers: Bool = false, completion: @escaping (() -> Void)) {
         guard let channel = channelController.sections.flatMap({ $0.channels }).filter({ $0.id == channelId }).first,
               channelObserver == nil else {
-            channelObserver = channelController.observe(\.sections, options: [.new], changeHandler: { [weak self] (controller, change) in
+                  channelObserver = channelController.observe(\.channels, options: [.new], changeHandler: { [weak self] (controller, change) in
                 guard let self = self else { return }
-                guard let channel = change.newValue?.flatMap({$0.channels}).first(where: { $0.id == channelId }) else { return }
+                guard let channel = change.newValue?.first(where: { $0.id == channelId }) else { return }
                 if showChannelsControllers == false {
                     self.showChannels(animated: false, completion: completion)
                 }
