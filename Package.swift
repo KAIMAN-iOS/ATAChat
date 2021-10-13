@@ -24,6 +24,7 @@ let package = Package(
         .package(url: "https://github.com/KAIMAN-iOS/KCoordinatorKit", .branch("master")),
         .package(url: "https://github.com/KAIMAN-iOS/ATAViews", .branch("master")),
         .package(url: "https://github.com/KAIMAN-iOS/KExtensions", .branch("master")),
+        .package(url: "https://github.com/KAIMAN-iOS/ATACommonObjects", .branch("master")),
         .package(url: "https://github.com/KAIMAN-iOS/ActionButton", .branch("master")),
         .package(url: "https://github.com/KAIMAN-iOS/ATAConfiguration", .branch("master")),
         .package(url: "https://github.com/MessageKit/MessageKit", from: "3.5.0"),
@@ -38,7 +39,7 @@ let package = Package(
         .target(
             name: "ATAChat",
             dependencies: [.product(name: "FirebaseAuth", package: "Firebase"),
-                           .product(name: "FirebaseAnalytics", package: "Firebase"),
+//                           .product(name: "FirebaseAnalytics", package: "Firebase"),
                            .product(name: "FirebaseFirestore", package: "Firebase"),
                            .product(name: "FirebaseStorage", package: "Firebase"),
                            .product(name: "FirebaseDatabase", package: "Firebase"),
@@ -52,7 +53,8 @@ let package = Package(
                            "EasyNotificationBadge",
                            "Lottie",
                            "Lightbox",
-                           "KExtensions"])
+                           "KExtensions",
+                           "ATACommonObjects"])
         
     ]
 )
