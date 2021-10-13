@@ -58,7 +58,7 @@ public protocol AlertGroupable {
 public protocol AlertGroupTypable {
     var groupTypeId: Int { get }
     var groupTypeName: String { get }
-    var sortIndex: Int { get }
+    var groupSortIndex: Int { get }
 }
 
 public protocol ChatUser {
@@ -79,17 +79,19 @@ class ChannelsViewController: UITableViewController {
             guard let rhs = object as? Section else { return false }
             return rhs.groupTypeName == groupTypeName
         }
-        static func < (lhs: Section, rhs: Section) -> Bool { lhs.groupTypeName == rhs.groupTypeName }
+        static func < (lhs: Section, rhs: Section) -> Bool { lhs.sortIndex < rhs.sortIndex }
         var channels: [Channel] = []
         var groupTypeName: String
+        var sortIndex: Int
         
         init(channels: [Channel] = [],
-             groupTypeName: String) {
+             groupTypeName: String, sortIndex: Int) {
             self.channels = channels
             self.groupTypeName = groupTypeName
+            self.sortIndex = sortIndex
         }
     }
-    @objc dynamic var sections: [Section] = []
+    dynamic var sections: [Section] = []
     @objc dynamic var channels: [Channel] = []
     static var conf: ATAConfiguration!
     private let toolbarLabel: UILabel = {
@@ -250,25 +252,25 @@ class ChannelsViewController: UITableViewController {
     }
     
     // MARK: - Helpers
-    func section(for group: String) -> Section {
-        guard let section = sections.first(where: { $0.groupTypeName == group }) else {
-            let section = Section(groupTypeName: group)
-            if (section.groupTypeName == Ride.rideChannelGroupTypeName) {
-                sections.insert(section, at: 0)
-            } else {
-                sections.append(section)
-            }
+    func section(for groupType: AlertGroupTypable?) -> Section? {
+        guard let groupType = groupType else {
+            return nil
+        }
+        guard let section = sections.first(where: { $0.groupTypeName == groupType.groupTypeName }) else {
+            let section = Section(groupTypeName: groupType.groupTypeName, sortIndex: groupType.groupSortIndex)
+            sections.append(section)
+            sections.sort()
             return section
         }
         return section
     }
     func section(for channel: Channel) -> Section? {
         if let channelId = channel.id, channelId.contains(Ride.rideChannelPrefix) {
-            return section(for: Ride.rideChannelGroupTypeName)
+            return section(for: groupTypes.first(where: { $0.groupTypeName == Ride.rideChannelGroupTypeName }))
         }
         guard let group = groups.first(where: { $0.groupId == channel.id }),
-              let name = groupTypes.first(where: { $0.groupTypeId == group.groupTypeId }) else { return nil }
-        return section(for: name.groupTypeName)
+              let groupType = groupTypes.first(where: { $0.groupTypeId == group.groupTypeId }) else { return nil }
+        return section(for: groupType)
     }
     
     private func addChannelToTable(_ channel: Channel) {
@@ -352,7 +354,7 @@ extension ChannelsViewController {
             return UITableViewCell()
         }
         let channel = sections[indexPath.section].channels[indexPath.row]
-        cell.configure(channel)
+        cell.configure(channel, with: mode)
         cell.textLabel?.font = .applicationFont(forTextStyle: .callout)
         cell.updateUnreadCount(channel.unreadCount)
         return cell

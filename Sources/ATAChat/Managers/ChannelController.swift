@@ -21,7 +21,7 @@ public class ChannelController {
     static var chanelNameDateFormatter: DateFormatter = {
         let form = DateFormatter()
         form.locale = .current
-        form.dateStyle = .medium
+        form.dateStyle = .short
         form.timeStyle = .short
         form.doesRelativeDateFormatting = false
         return form
@@ -41,19 +41,27 @@ public class ChannelController {
             return
         }
         
-        getChatIds(for: [driver.id, passenger.id]) { ids in
-            guard let ids = ids else {
-                return
+        guard driver.chatId != "", passenger.chatId != "" else {
+            getChatIds(for: [driver.id, passenger.id]) { [weak self] ids in
+                guard let ids = ids else {
+                    return
+                }
+                guard let driverChatId = ids[driver.id], let passengerChatId = ids[passenger.id] else {
+                    return
+                }
+                self?.createRideChannel(for: ride, with: driverChatId, and: passengerChatId)
             }
-            guard let driverChatId = ids[driver.id], let passengerChatId = ids[passenger.id] else {
-                return
-            }
-            let channelName = "Course du \(ChannelController.chanelNameDateFormatter.string(from: ride.ride.startDate.value))"
-            let createdAt = ChannelController.createdDateFormatter.string(from: Date())
-            let channelId = "\(Ride.rideChannelPrefix)\(ride.ride.id)"
-            let data: [String:Any] = ["name": channelName, "user": [driverChatId, passengerChatId], "createdAt": createdAt]
-            self.channelReference.document(channelId).setData(data)
+            return
         }
+        createRideChannel(for: ride, with: driver.chatId, and: passenger.chatId)
+    }
+    
+    private func createRideChannel(for ride: OngoingRide, with driverChatId: String, and passengerChatId: String){
+        let channelName = "%name% - Course du \(ChannelController.chanelNameDateFormatter.string(from: ride.ride.startDate.value))"
+        let createdAt = ChannelController.createdDateFormatter.string(from: Date())
+        let channelId = "\(Ride.rideChannelPrefix)\(ride.ride.id)"
+        let data: [String:Any] = ["name": channelName, "user": [driverChatId, passengerChatId], "createdAt": createdAt, "driverName": ride.driver?.shortDisplayName ?? "", "passengerName": ride.passenger?.shortDisplayName ?? ""]
+        self.channelReference.document(channelId).setData(data)
     }
     
     public func deleteRideChannel(for rideId: Int) {

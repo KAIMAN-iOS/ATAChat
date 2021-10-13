@@ -33,6 +33,8 @@ import FirebaseFirestore
     let name: String
     let users: [String]
     var unreadCount: Int = 0
+    let driverName: String
+    let passengerName: String
 //    var isAlertGroup: Bool = false
     
     func update(_ unread: Int) {
@@ -43,6 +45,8 @@ import FirebaseFirestore
         id = nil
         self.name = name
         self.users = []
+        self.driverName = ""
+        self.passengerName = ""
     }
     
     init?(document: QueryDocumentSnapshot) {
@@ -55,6 +59,21 @@ import FirebaseFirestore
         id = document.documentID
         self.name = name
         self.users = data["user"] as? [String] ?? []
+        self.driverName = data["driverName"] as? String ?? "DriverName"
+        self.passengerName = data["passengerName"] as? String ?? "PassengerName"
+    }
+    
+    public func displayName(for mode: ChatUserMode) -> String{
+        guard name.contains("%name%") else { return name }
+        
+        var text = name
+        switch mode {
+        case .passenger:
+            text = text.replacingOccurrences(of: "%name%", with: driverName)
+        case .driver:
+            text = text.replacingOccurrences(of: "%name%", with: passengerName)
+        }
+        return text
     }
     
 }
@@ -68,6 +87,8 @@ extension Channel: DatabaseRepresentation {
         if let id = id {
             rep["id"] = id
         }
+        rep["driverName"] = driverName
+        rep["passengerName"] = passengerName
         
         return rep
     }

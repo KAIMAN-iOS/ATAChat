@@ -30,9 +30,9 @@ class ChannelCell: UITableViewCell {
         badge.setCount(count)
     }
     
-    func configure(_ channel: Channel) {
+    func configure(_ channel: Channel, with mode: ChatUserMode) {
         backgroundColor = ChannelsViewController.conf.palette.background
-        label.set(text: channel.name, for: .subheadline, textColor: ChannelsViewController.conf.palette.mainTexts)
+        label.set(text: channel.displayName(for: mode), for: .subheadline, textColor: ChannelsViewController.conf.palette.mainTexts)
         layoutIfNeeded()
         badge.setCircleAtFrame(CGRect(origin: CGPoint(x: label.bounds.width + 10, y: 0),
                                       size: CGSize(width: 20, height: 20)))
