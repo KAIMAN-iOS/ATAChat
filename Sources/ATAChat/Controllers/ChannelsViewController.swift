@@ -266,7 +266,7 @@ class ChannelsViewController: UITableViewController {
     }
     func section(for channel: Channel) -> Section? {
         if (channel.id ?? "").contains(Ride.rideChannelPrefix) {
-            return section(for: groupTypes.first(where: { $0.groupTypeName == Ride.rideChannelGroupTypeName }))
+            return section(for: groupTypes.first(where: { $0.groupTypeName == Ride.rideChannelPrefix }))
         }
         guard let group = groups.first(where: { $0.groupId == channel.id }),
               let groupType = groupTypes.first(where: { $0.groupTypeId == group.groupTypeId }) else { return nil }
@@ -370,7 +370,11 @@ extension ChannelsViewController {
         let view = UIView()
         view.backgroundColor = ChannelsViewController.conf.palette.background
         let label = UILabel()
-        label.set(text: sections[section].groupTypeName.capitalized, for: .headline, traits: [.traitBold], textColor: ChannelsViewController.conf.palette.mainTexts)
+        var grpTypeName = sections[section].groupTypeName
+        if grpTypeName.contains(Ride.rideChannelPrefix) {
+            grpTypeName = Channel.rideChannelGroupTypeName(for: mode)
+        }
+        label.set(text: grpTypeName.capitalized, for: .headline, traits: [.traitBold], textColor: ChannelsViewController.conf.palette.mainTexts)
         view.addSubview(label)
         label.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(18)

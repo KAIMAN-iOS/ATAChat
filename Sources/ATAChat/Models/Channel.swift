@@ -35,6 +35,13 @@ import FirebaseFirestore
     var unreadCount: Int = 0
     let driverName: String
     let passengerName: String
+    
+    public static func rideChannelGroupTypeName(for mode: Mode) -> String {
+        switch mode {
+        case .passenger: return "passengerRideChannelsTitle".bundleLocale()
+        case .driver: return "driverRideChannelsTitle".bundleLocale()
+        }
+    }
 //    var isAlertGroup: Bool = false
     
     func update(_ unread: Int) {
