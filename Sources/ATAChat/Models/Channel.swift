@@ -33,6 +33,15 @@ import FirebaseFirestore
     let name: String
     let users: [String]
     var unreadCount: Int = 0
+    let driverName: String
+    let passengerName: String
+    
+    public static func rideChannelGroupTypeName(for mode: Mode) -> String {
+        switch mode {
+        case .passenger: return "passengerRideChannelsTitle".bundleLocale()
+        case .driver: return "driverRideChannelsTitle".bundleLocale()
+        }
+    }
 //    var isAlertGroup: Bool = false
     
     func update(_ unread: Int) {
@@ -43,6 +52,8 @@ import FirebaseFirestore
         id = nil
         self.name = name
         self.users = []
+        self.driverName = ""
+        self.passengerName = ""
     }
     
     init?(document: QueryDocumentSnapshot) {
@@ -55,8 +66,20 @@ import FirebaseFirestore
         id = document.documentID
         self.name = name
         self.users = data["user"] as? [String] ?? []
+        self.driverName = data["driverName"] as? String ?? "DriverName"
+        self.passengerName = data["passengerName"] as? String ?? "PassengerName"
     }
     
+    public func displayName(for mode: Mode) -> String{
+        guard name.contains("%name%") else { return name }
+        
+        switch mode {
+        case .passenger:
+            return name.replacingOccurrences(of: "%name%", with: driverName)
+        case .driver:
+            return name.replacingOccurrences(of: "%name%", with: passengerName)
+        }
+    }
 }
 extension Channel: Channelable {}
 
@@ -68,6 +91,8 @@ extension Channel: DatabaseRepresentation {
         if let id = id {
             rep["id"] = id
         }
+        rep["driverName"] = driverName
+        rep["passengerName"] = passengerName
         
         return rep
     }

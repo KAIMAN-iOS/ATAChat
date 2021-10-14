@@ -70,6 +70,7 @@ final class ChatViewController: MessagesViewController {
     private var messageListener: ListenerRegistration?
     private let user: ChatUser
     private let channel: Channel
+    private let mode: Mode
     lazy var refreshControl = UIRefreshControl()
     public var maxSize: Double = 1200
     public var showAvatars: Bool = true  {
@@ -91,11 +92,12 @@ final class ChatViewController: MessagesViewController {
         messageListener?.remove()
     }
     
-    init(user: ChatUser, channel: Channel) {
+    init(user: ChatUser, channel: Channel, mode: Mode) {
         self.user = user
         self.channel = channel
+        self.mode = mode
         super.init(nibName: nil, bundle: nil)
-        title = channel.name
+        title = channel.displayName(for: mode)
         if channel.users.count == 2 {
             listenForRead()
         }

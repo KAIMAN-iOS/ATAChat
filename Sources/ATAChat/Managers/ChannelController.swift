@@ -21,7 +21,7 @@ public class ChannelController {
     static var chanelNameDateFormatter: DateFormatter = {
         let form = DateFormatter()
         form.locale = .current
-        form.dateStyle = .medium
+        form.dateStyle = .short
         form.timeStyle = .short
         form.doesRelativeDateFormatting = false
         return form
@@ -35,60 +35,41 @@ public class ChannelController {
         return form
     }()
     
-    public func createRideChannel(ride: OngoingRide) {
+    public func createRideChannel(for ride: OngoingRide) {
         
-        guard let driver = ride.driver else {
+        guard let driver = ride.driver, let passenger = ride.passenger else {
             return
         }
-        guard let passenger = ride.passenger else {
+        
+        guard driver.chatId.isEmpty == false, passenger.chatId.isEmpty == false else {
+            getChatIds(for: [driver.id, passenger.id]) { [weak self] ids in
+                guard let ids = ids else {
+                    return
+                }
+                guard let driverChatId = ids[driver.id], let passengerChatId = ids[passenger.id] else {
+                    return
+                }
+                self?.createRideChannel(for: ride, driverChatId: driverChatId, passengerChatId: passengerChatId)
+            }
             return
         }
-//        userReference.whereField("id", isEqualTo: passenger.id).addSnapshotListener { (querySnapshot, error) in
-//                    guard let documents = querySnapshot?.documents else {
-//                        print("No documents")
-//                        return
-//                    }
-//
-//                    let users = documents.map { (queryDocumentSnapshot) -> ChatUserT in
-//                        let docId = queryDocumentSnapshot.reference.documentID
-//                        let data = queryDocumentSnapshot.data()
-//                        let name = data["name"] as? String ?? ""
-//                        let id = data["id"] as? Int ?? 0
-//                        let chatUser: ChatUserT = ChatUserT(id: id, name: name)
-//                        return chatUser
-//                    }
-//                    print(users)
-//                }
-        
-        getChatIds(for: [driver.id, passenger.id]) { ids in
-            guard let ids = ids else {
-                return
-            }
-            guard let driverChatId = ids[driver.id], let passengerChatId = ids[passenger.id] else {
-                return
-            }
-            let channelName = "Course du \(ChannelController.chanelNameDateFormatter.string(from: ride.ride.startDate.value))"
-            let createdAt = ChannelController.createdDateFormatter.string(from: Date())
-            let channelId = [driverChatId, "#", passengerChatId].joined()
-            let data: [String:Any] = ["name": channelName, "user": [driverChatId, passengerChatId], "createdAt":createdAt]
-            self.channelReference.document(channelId).setData(data)
-        }
-        
-        
-        
-        //let data: [String:Any] = ["name": channelName, "user": [driver.chatId, passenger.chatId]]
-        //channelReference.document([driver.chatId, "#", passenger.chatId].joined()).setData(data)
-        
-//        let tmp = userReference.whereField("id", arrayContains: "\(passenger.id)").getDocuments{a, b in
-//            print(a)
-//            print(b)
-//        }
-//        print(tmp)
+        createRideChannel(for: ride, driverChatId: driver.chatId, passengerChatId: passenger.chatId)
     }
     
-    private func getChatIds(for ids: [Int], completion: @escaping (([Int:String]?) -> Void)){
-        //userReference.whereF
-        userReference.whereField("id", in: ids).addSnapshotListener { (querySnapshot, error) in
+    private func createRideChannel(for ride: OngoingRide, driverChatId: String, passengerChatId: String){
+        let channelName = "%name% - Course du \(ChannelController.chanelNameDateFormatter.string(from: ride.ride.startDate.value))"
+        let createdAt = ChannelController.createdDateFormatter.string(from: Date())
+        let channelId = "\(Ride.rideChannelPrefix)\(ride.ride.id)"
+        let data: [String:Any] = ["name": channelName, "user": [driverChatId, passengerChatId], "createdAt": createdAt, "driverName": ride.driver?.shortDisplayName ?? "", "passengerName": ride.passenger?.shortDisplayName ?? ""]
+        self.channelReference.document(channelId).setData(data)
+    }
+    
+    public func deleteRideChannel(for rideId: Int) {
+        channelReference.document("\(Ride.rideChannelPrefix)\(rideId)").delete()
+    }
+    
+    private func getChatIds(for userIds: [Int], completion: @escaping (([Int:String]?) -> Void)) {
+        userReference.whereField("id", in: userIds).addSnapshotListener { (querySnapshot, error) in
             guard let documents = querySnapshot?.documents else {
                 print("No documents")
                 return completion(nil)
@@ -99,12 +80,6 @@ public class ChannelController {
                 let id = data["id"] as? Int ?? 0
                 $0[id] = docId
             }))
-//                documents.map { (queryDocumentSnapshot) -> [Int:String] in
-//                let docId = queryDocumentSnapshot.reference.documentID
-//                let data = queryDocumentSnapshot.data()
-//                let id = data["id"] as? Int ?? 0
-//                return [id:docId]
-//            } )
         }
     }
 }
