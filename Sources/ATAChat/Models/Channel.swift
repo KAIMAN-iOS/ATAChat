@@ -63,19 +63,16 @@ import FirebaseFirestore
         self.passengerName = data["passengerName"] as? String ?? "PassengerName"
     }
     
-    public func displayName(for mode: ChatUserMode) -> String{
+    public func displayName(for mode: Mode) -> String{
         guard name.contains("%name%") else { return name }
         
-        var text = name
         switch mode {
         case .passenger:
-            text = text.replacingOccurrences(of: "%name%", with: driverName)
+            return name.replacingOccurrences(of: "%name%", with: driverName)
         case .driver:
-            text = text.replacingOccurrences(of: "%name%", with: passengerName)
+            return name.replacingOccurrences(of: "%name%", with: passengerName)
         }
-        return text
     }
-    
 }
 extension Channel: Channelable {}
 

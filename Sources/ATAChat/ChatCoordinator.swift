@@ -22,7 +22,6 @@ public protocol ATAChatMessageDelegate: AnyObject {
     func didTapMessage(for item: Message) -> Bool
 }
 
-public typealias ChatUserMode = Mode
 public enum Mode { case driver, passenger }
 
 public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
@@ -30,7 +29,7 @@ public class ChatCoordinator<DeepLinkType>: Coordinator<DeepLinkType> {
     var currentUser: ChatUser!
     var channelId: String?
     var chatMessageDelegate: ATAChatMessageDelegate?
-    var mode: ChatUserMode!
+    var mode: Mode!
     public init(router: RouterType,
                 currentUser: ChatUser,
                 channelId: String? = nil,

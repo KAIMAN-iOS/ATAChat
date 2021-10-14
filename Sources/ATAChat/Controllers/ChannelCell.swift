@@ -30,7 +30,7 @@ class ChannelCell: UITableViewCell {
         badge.setCount(count)
     }
     
-    func configure(_ channel: Channel, with mode: ChatUserMode) {
+    func configure(_ channel: Channel, for mode: Mode) {
         backgroundColor = ChannelsViewController.conf.palette.background
         label.set(text: channel.displayName(for: mode), for: .subheadline, textColor: ChannelsViewController.conf.palette.mainTexts)
         layoutIfNeeded()

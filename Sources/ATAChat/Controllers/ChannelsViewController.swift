@@ -91,7 +91,7 @@ class ChannelsViewController: UITableViewController {
             self.sortIndex = sortIndex
         }
     }
-    dynamic var sections: [Section] = []
+    var sections: [Section] = []
     @objc dynamic var channels: [Channel] = []
     static var conf: ATAConfiguration!
     private let toolbarLabel: UILabel = {
@@ -265,7 +265,7 @@ class ChannelsViewController: UITableViewController {
         return section
     }
     func section(for channel: Channel) -> Section? {
-        if let channelId = channel.id, channelId.contains(Ride.rideChannelPrefix) {
+        if (channel.id ?? "").contains(Ride.rideChannelPrefix) {
             return section(for: groupTypes.first(where: { $0.groupTypeName == Ride.rideChannelGroupTypeName }))
         }
         guard let group = groups.first(where: { $0.groupId == channel.id }),
@@ -354,7 +354,7 @@ extension ChannelsViewController {
             return UITableViewCell()
         }
         let channel = sections[indexPath.section].channels[indexPath.row]
-        cell.configure(channel, with: mode)
+        cell.configure(channel, for: mode)
         cell.textLabel?.font = .applicationFont(forTextStyle: .callout)
         cell.updateUnreadCount(channel.unreadCount)
         return cell

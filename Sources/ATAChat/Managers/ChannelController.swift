@@ -41,7 +41,7 @@ public class ChannelController {
             return
         }
         
-        guard driver.chatId != "", passenger.chatId != "" else {
+        guard driver.chatId.isEmpty == false, passenger.chatId.isEmpty == false else {
             getChatIds(for: [driver.id, passenger.id]) { [weak self] ids in
                 guard let ids = ids else {
                     return
@@ -49,14 +49,14 @@ public class ChannelController {
                 guard let driverChatId = ids[driver.id], let passengerChatId = ids[passenger.id] else {
                     return
                 }
-                self?.createRideChannel(for: ride, with: driverChatId, and: passengerChatId)
+                self?.createRideChannel(for: ride, driverChatId: driverChatId, passengerChatId: passengerChatId)
             }
             return
         }
-        createRideChannel(for: ride, with: driver.chatId, and: passenger.chatId)
+        createRideChannel(for: ride, driverChatId: driver.chatId, passengerChatId: passenger.chatId)
     }
     
-    private func createRideChannel(for ride: OngoingRide, with driverChatId: String, and passengerChatId: String){
+    private func createRideChannel(for ride: OngoingRide, driverChatId: String, passengerChatId: String){
         let channelName = "%name% - Course du \(ChannelController.chanelNameDateFormatter.string(from: ride.ride.startDate.value))"
         let createdAt = ChannelController.createdDateFormatter.string(from: Date())
         let channelId = "\(Ride.rideChannelPrefix)\(ride.ride.id)"
