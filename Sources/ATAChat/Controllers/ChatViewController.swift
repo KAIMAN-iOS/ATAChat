@@ -266,7 +266,6 @@ final class ChatViewController: MessagesViewController {
             self.handleDocumentChange(change)
         }
         messagesCollectionView.reloadData()
-        scrollToBottom()
         
         guard let lastSnapshot = snapshot.documents.last else {
             // The collection is empty.
