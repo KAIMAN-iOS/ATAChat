@@ -20,6 +20,7 @@ public protocol ATAChatMessageDelegate: AnyObject {
     func messageForDocument(_ doc: QueryDocumentSnapshot) -> Message?
     // returns wether the delegate handled the tap or not
     func didTapMessage(for item: Message) -> Bool
+    func didOpenChannel(for channel: Channel?)
 }
 
 public enum Mode { case driver, passenger }

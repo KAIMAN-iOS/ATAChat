@@ -148,6 +148,7 @@ final class ChatViewController: MessagesViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        chatMessageDelegate?.didOpenChannel(for: nil)
         ChatReadStateController.shared.resetUnreadCount(for: user.chatId, channel: channel)
     }
     
@@ -171,6 +172,8 @@ final class ChatViewController: MessagesViewController {
         messagesCollectionView.messagesDisplayDelegate = self
         messagesCollectionView.messageCellDelegate = self
 //        scrollsToLastItemOnKeyboardBeginsEditing = true
+        
+        chatMessageDelegate?.didOpenChannel(for: channel)
         
         guard showAvatars == false else { return }
         if let layout = messagesCollectionView.collectionViewLayout as? MessagesCollectionViewFlowLayout {
@@ -654,5 +657,11 @@ extension ChatViewController: UIImagePickerControllerDelegate, UINavigationContr
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         picker.dismiss(animated: true, completion: nil)
+    }
+}
+
+extension ChatViewController {
+    public func getChannel() -> Channel {
+        channel
     }
 }

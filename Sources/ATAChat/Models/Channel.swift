@@ -28,8 +28,8 @@
 
 import FirebaseFirestore
 
-@objc class Channel: NSObject {
-    let id: String?
+@objc public class Channel: NSObject {
+    public let id: String?
     let name: String
     let users: [String]
     var unreadCount: Int = 0
@@ -105,7 +105,7 @@ extension Channel: Comparable {
         return lhs.id == rhs.id
     }
     
-    static func < (lhs: Channel, rhs: Channel) -> Bool {
+    public static func < (lhs: Channel, rhs: Channel) -> Bool {
         return lhs.name.lowercased() < rhs.name.lowercased()
     }
     
