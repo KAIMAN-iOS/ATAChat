@@ -40,6 +40,7 @@ import Lottie
 import UIViewExtension
 import Combine
 import ATACommonObjects
+import PromiseKit
 
 extension Mode {
     var noChannelTitle: String {
@@ -268,26 +269,63 @@ class ChannelsViewController: UITableViewController {
         if (channel.id ?? "").contains(Ride.rideChannelPrefix) {
             return section(for: groupTypes.first(where: { $0.groupTypeName == Ride.rideChannelPrefix }))
         }
+        if (channel.id ?? "").contains(Ride.webChannelPrefix) {
+            return section(for: groupTypes.first(where: { $0.groupTypeName == Ride.webChannelPrefix }))
+        }
         guard let group = groups.first(where: { $0.groupId == channel.id }),
               let groupType = groupTypes.first(where: { $0.groupTypeId == group.groupTypeId }) else { return nil }
         return section(for: groupType)
     }
     
+    func isEmptyChannel(for channel: Channel) -> Promise<Bool> {
+        return Promise<Bool> { resolver in
+            db.collection(["messages", channel.id ?? "", "messages"].joined(separator: "/")).getDocuments(completion: { docs, error in
+                if docs?.isEmpty == false {
+                    resolver.fulfill(false)
+                } else {
+                    resolver.fulfill(true)
+                }
+            })
+        }
+    }
+    
     private func addChannelToTable(_ channel: Channel) {
-        guard let section = self.section(for: channel) else { return }
-        guard !section.channels.contains(channel) else {
-            return
+        if (channel.id ?? "").contains(Ride.webChannelPrefix) {
+            isEmptyChannel(for: channel).done({ [weak self] result in
+                guard let self = self else { return }
+                guard let section = self.section(for: channel) else { return }
+                if result == false {
+                    guard !section.channels.contains(channel) else {
+                        return
+                    }
+                    section.channels.append(channel)
+                    guard !self.channels.contains(channel) else {
+                        return
+                    }
+                    self.channels.append(channel)
+                    section.channels.sort()
+                    guard section.channels.firstIndex(of: channel) != nil else {
+                        return
+                    }
+                    self.tableView.reloadData()
+                }
+            })
+        } else {
+            guard let section = self.section(for: channel) else { return }
+            guard !section.channels.contains(channel) else {
+                return
+            }
+            section.channels.append(channel)
+            guard !channels.contains(channel) else {
+                return
+            }
+            channels.append(channel)
+            section.channels.sort()
+            guard section.channels.firstIndex(of: channel) != nil else {
+                return
+            }
+            tableView.reloadData()
         }
-        section.channels.append(channel)
-        guard !channels.contains(channel) else {
-            return
-        }
-        channels.append(channel)
-        section.channels.sort()
-        guard section.channels.firstIndex(of: channel) != nil else {
-            return
-        }
-        tableView.reloadData()
     }
     
     private func updateChannelInTable(_ channel: Channel) {
@@ -373,6 +411,9 @@ extension ChannelsViewController {
         var grpTypeName = sections[section].groupTypeName
         if grpTypeName.contains(Ride.rideChannelPrefix) {
             grpTypeName = Channel.rideChannelGroupTypeName(for: mode)
+        }
+        if grpTypeName.contains(Ride.webChannelPrefix) {
+            grpTypeName = Channel.webChannelGroupTypeName
         }
         label.set(text: grpTypeName.capitalized, for: .headline, traits: [.traitBold], textColor: ChannelsViewController.conf.palette.mainTexts)
         view.addSubview(label)

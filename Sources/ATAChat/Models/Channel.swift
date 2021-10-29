@@ -42,6 +42,9 @@ import FirebaseFirestore
         case .driver: return "driverRideChannelsTitle".bundleLocale()
         }
     }
+    public static var webChannelGroupTypeName: String {
+        "web group type title".bundleLocale()
+    }
 //    var isAlertGroup: Bool = false
     
     func update(_ unread: Int) {
@@ -70,14 +73,21 @@ import FirebaseFirestore
         self.passengerName = data["passengerName"] as? String ?? "PassengerName"
     }
     
-    public func displayName(for mode: Mode) -> String{
-        guard name.contains("%name%") else { return name }
-        
-        switch mode {
-        case .passenger:
-            return name.replacingOccurrences(of: "%name%", with: driverName)
-        case .driver:
-            return name.replacingOccurrences(of: "%name%", with: passengerName)
+    public func displayName(for mode: Mode? = nil) -> String {
+        if name.contains("%name%") {
+            guard let mode = mode else {
+                return "\(driverName) - \(passengerName)"
+            }
+            switch mode {
+            case .passenger:
+                return name.replacingOccurrences(of: "%name%", with: driverName)
+            case .driver:
+                return name.replacingOccurrences(of: "%name%", with: passengerName)
+            }
+        } else if name.contains("%destinatorName%") {
+            return name.replacingOccurrences(of: "%destinatorName%", with: driverName)
+        } else {
+            return name
         }
     }
 }
