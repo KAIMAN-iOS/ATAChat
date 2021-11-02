@@ -84,8 +84,8 @@ import FirebaseFirestore
             case .driver:
                 return name.replacingOccurrences(of: "%name%", with: passengerName)
             }
-        } else if name.contains("%destinatorName%") {
-            return name.replacingOccurrences(of: "%destinatorName%", with: driverName)
+        } else if name.contains("Chat") {
+            return name.components(separatedBy: "/").last ?? name
         } else {
             return name
         }
