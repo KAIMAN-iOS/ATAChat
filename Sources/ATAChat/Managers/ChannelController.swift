@@ -7,6 +7,7 @@
 
 import Foundation
 import FirebaseFirestore
+import FirebaseDatabase
 import ATACommonObjects
 
 
@@ -15,6 +16,8 @@ public class ChannelController {
     private let db = Firestore.firestore()
     private var channelReference: CollectionReference { db.collection("messages") }
     private var userReference: CollectionReference { db.collection("user") }
+    private var driver: BaseDriver?
+    private var passenger: BasePassenger?
 
     private init() {}
     
@@ -40,6 +43,8 @@ public class ChannelController {
         guard let driver = ride.driver, let passenger = ride.passenger else {
             return
         }
+        self.driver = driver
+        self.passenger = passenger
         
         guard driver.chatId.isEmpty == false, passenger.chatId.isEmpty == false else {
             getChatIds(for: [driver.id, passenger.id]) { [weak self] ids in
@@ -66,6 +71,10 @@ public class ChannelController {
     
     public func deleteRideChannel(for rideId: Int) {
         channelReference.document("\(Ride.rideChannelPrefix)\(rideId)").delete()
+        guard let chatId = driver?.chatId else { return }
+        let db = Database.database(url: "https://ata-chauffeur-app-default-rtdb.europe-west1.firebasedatabase.app").reference()
+        var child: DatabaseReference! = db.child("messages").child(chatId).child("\(Ride.rideChannelPrefix)\(rideId)")
+        child.removeValue()
     }
     
     private func getChatIds(for userIds: [Int], completion: @escaping (([Int:String]?) -> Void)) {
