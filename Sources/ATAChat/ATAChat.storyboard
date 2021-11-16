@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="18122" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="19162" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="18122"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="19162"/>
         <capability name="Named colors" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -19,34 +19,60 @@
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <prototypes>
                             <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="ChannelCell" id="Vbf-zN-N9f" customClass="ChannelCell" customModule="ATAChat">
-                                <rect key="frame" x="0.0" y="24.5" width="414" height="37"/>
+                                <rect key="frame" x="0.0" y="44.5" width="414" height="57.5"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="Vbf-zN-N9f" id="iT9-kr-ESk">
-                                    <rect key="frame" x="0.0" y="0.0" width="414" height="37"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="414" height="57.5"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Hce-33-HPc">
-                                            <rect key="frame" x="16" y="8" width="41.5" height="21"/>
-                                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                            <color key="textColor" name="mainTexts"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="750" verticalHuggingPriority="251" image="rightArrowTemplate" translatesAutoresizingMaskIntoConstraints="NO" id="YEv-mJ-6ef">
-                                            <rect key="frame" x="382" y="11" width="15.5" height="15.5"/>
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gTf-SS-4fD">
+                                            <rect key="frame" x="0.0" y="0.0" width="348.5" height="57.5"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Label gerzg egrerg zgfz egz erg erg zreg zeg z rgr g zrg ze gzegfze g" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Hce-33-HPc">
+                                                    <rect key="frame" x="16" y="8" width="332.5" height="41.5"/>
+                                                    <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="17"/>
+                                                    <color key="textColor" name="mainTexts"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                            <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                            <constraints>
+                                                <constraint firstItem="Hce-33-HPc" firstAttribute="top" secondItem="gTf-SS-4fD" secondAttribute="top" constant="8" id="LyL-tA-yjn"/>
+                                                <constraint firstItem="Hce-33-HPc" firstAttribute="leading" secondItem="gTf-SS-4fD" secondAttribute="leading" constant="16" id="Rhx-BM-QYw"/>
+                                                <constraint firstAttribute="trailing" secondItem="Hce-33-HPc" secondAttribute="trailing" id="ZY1-MJ-NGp"/>
+                                                <constraint firstAttribute="bottom" secondItem="Hce-33-HPc" secondAttribute="bottom" constant="8" id="g8c-Gm-njZ"/>
+                                            </constraints>
+                                        </view>
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="9za-To-jbb">
+                                            <rect key="frame" x="348.5" y="19" width="20" height="20"/>
+                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                            <constraints>
+                                                <constraint firstAttribute="width" secondItem="9za-To-jbb" secondAttribute="height" multiplier="1:1" id="OXz-Bs-mBn"/>
+                                                <constraint firstAttribute="width" constant="20" id="bEu-IR-g4V"/>
+                                            </constraints>
+                                        </view>
+                                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="rightArrowTemplate" translatesAutoresizingMaskIntoConstraints="NO" id="YEv-mJ-6ef">
+                                            <rect key="frame" x="372.5" y="21" width="25" height="15.5"/>
                                             <color key="tintColor" name="inactive"/>
+                                            <constraints>
+                                                <constraint firstAttribute="width" constant="25" id="s02-bx-Uxl"/>
+                                            </constraints>
                                         </imageView>
                                     </subviews>
                                     <constraints>
-                                        <constraint firstItem="Hce-33-HPc" firstAttribute="leading" secondItem="iT9-kr-ESk" secondAttribute="leading" constant="16" id="2Ut-av-rE8"/>
+                                        <constraint firstItem="9za-To-jbb" firstAttribute="trailing" secondItem="YEv-mJ-6ef" secondAttribute="leading" constant="-4" id="8i6-rO-AeN"/>
                                         <constraint firstItem="YEv-mJ-6ef" firstAttribute="centerY" secondItem="iT9-kr-ESk" secondAttribute="centerY" id="9ti-1W-jM2"/>
+                                        <constraint firstItem="gTf-SS-4fD" firstAttribute="leading" secondItem="iT9-kr-ESk" secondAttribute="leading" id="AAC-kM-ZDh"/>
                                         <constraint firstAttribute="trailing" secondItem="YEv-mJ-6ef" secondAttribute="trailing" constant="16.5" id="KL7-I7-ej9"/>
-                                        <constraint firstAttribute="bottom" secondItem="Hce-33-HPc" secondAttribute="bottom" constant="8" id="bJk-t8-2IT"/>
-                                        <constraint firstItem="Hce-33-HPc" firstAttribute="top" secondItem="iT9-kr-ESk" secondAttribute="top" constant="8" id="oGm-IC-epU"/>
-                                        <constraint firstItem="YEv-mJ-6ef" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="Hce-33-HPc" secondAttribute="trailing" constant="8" id="wAd-y2-iwy"/>
+                                        <constraint firstItem="9za-To-jbb" firstAttribute="centerY" secondItem="iT9-kr-ESk" secondAttribute="centerY" id="Nzm-et-LoG"/>
+                                        <constraint firstItem="gTf-SS-4fD" firstAttribute="trailing" secondItem="9za-To-jbb" secondAttribute="leading" id="eNI-X0-mFC"/>
+                                        <constraint firstItem="gTf-SS-4fD" firstAttribute="top" secondItem="iT9-kr-ESk" secondAttribute="top" id="kXE-Kf-LVJ"/>
+                                        <constraint firstAttribute="bottom" secondItem="gTf-SS-4fD" secondAttribute="bottom" id="sNd-8x-Sgf"/>
                                     </constraints>
                                 </tableViewCellContentView>
                                 <connections>
                                     <outlet property="arrow" destination="YEv-mJ-6ef" id="At1-Ye-cWA"/>
+                                    <outlet property="badgeview" destination="9za-To-jbb" id="VIo-gR-le2"/>
                                     <outlet property="label" destination="Hce-33-HPc" id="8ce-Ja-oSE"/>
                                 </connections>
                             </tableViewCell>
@@ -65,7 +91,7 @@
     <resources>
         <image name="rightArrowTemplate" width="15.5" height="15.5"/>
         <namedColor name="inactive">
-            <color red="0.66900002956390381" green="0.66900002956390381" blue="0.66900002956390381" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <color red="0.66666666666666663" green="0.66666666666666663" blue="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
         <namedColor name="mainTexts">
             <color red="0.16099999845027924" green="0.17599999904632568" blue="0.2199999988079071" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>

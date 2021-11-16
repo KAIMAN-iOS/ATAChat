@@ -10,16 +10,18 @@ import TableViewExtension
 import ATAViews
 
 class ChannelCell: UITableViewCell {
+    @IBOutlet weak var badgeview: UIView! {
+        didSet {
+            badge = ATABadgeView(view: badgeview)
+        }
+    }
+    
     @IBOutlet weak var arrow: UIImageView!  {
         didSet {
             arrow.tintColor = ChannelsViewController.conf.palette.inactive
         }
     }
-    @IBOutlet weak var label: UILabel!  {
-        didSet {
-            badge = ATABadgeView(view: label)
-        }
-    }
+    @IBOutlet weak var label: UILabel!
     var badge: BadgeHub!
     
     override func layoutSubviews() {
@@ -34,8 +36,6 @@ class ChannelCell: UITableViewCell {
         backgroundColor = ChannelsViewController.conf.palette.background
         label.set(text: channel.displayName(for: mode), for: .subheadline, textColor: ChannelsViewController.conf.palette.mainTexts)
         layoutIfNeeded()
-        badge.setCircleAtFrame(CGRect(origin: CGPoint(x: label.bounds.width + 10, y: 0),
-                                      size: CGSize(width: 20, height: 20)))
     }
     
     override func awakeFromNib() {
