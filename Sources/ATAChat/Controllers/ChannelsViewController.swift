@@ -293,8 +293,8 @@ class ChannelsViewController: UITableViewController {
         if (channel.id ?? "").contains(Ride.webChannelPrefix) {
             isEmptyChannel(for: channel).done({ [weak self] result in
                 guard let self = self else { return }
-                guard let section = self.section(for: channel) else { return }
                 if result == false {
+                    guard let section = self.section(for: channel) else { return }
                     guard !section.channels.contains(channel) else {
                         return
                     }
