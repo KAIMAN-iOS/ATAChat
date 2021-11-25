@@ -152,6 +152,11 @@ final class ChatViewController: MessagesViewController {
         ChatReadStateController.shared.resetUnreadCount(for: user.chatId, channel: channel)
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        scrollToBottom()
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         refreshControl.tintColor = ChannelsViewController.conf.palette.primary
@@ -457,6 +462,11 @@ extension ChatViewController: MessageCellDelegate {
         if let del = chatMessageDelegate {
             let _ = del.didTapMessage(for: message)
         }
+    }
+    
+    func didTapBackground(in cell: MessageCollectionViewCell) {
+        messageInputBar.inputTextView.resignFirstResponder()
+        scrollToBottom()
     }
 }
 
