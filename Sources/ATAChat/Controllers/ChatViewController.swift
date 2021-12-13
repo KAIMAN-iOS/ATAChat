@@ -86,6 +86,7 @@ final class ChatViewController: MessagesViewController {
     // used for read/distributed for one to one discussions
     var lastReadDate: Date?
     var chatMessageDelegate: ATAChatMessageDelegate?
+    var messageTapped: Bool = false
     
     deinit {
         print("💀 DEINIT \(URL(fileURLWithPath: #file).lastPathComponent)")
@@ -148,12 +149,15 @@ final class ChatViewController: MessagesViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        chatMessageDelegate?.didOpenChannel(for: nil)
+        if messageTapped == false {
+            chatMessageDelegate?.didOpenChannel(for: nil)
+        }
         ChatReadStateController.shared.resetUnreadCount(for: user.chatId, channel: channel)
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        messageTapped = false
         scrollToBottom()
     }
     
@@ -270,8 +274,8 @@ final class ChatViewController: MessagesViewController {
     
     func handle(snapshot: QuerySnapshot) {
         messagesCollectionView.refreshControl?.endRefreshing()
-        snapshot.documentChanges.forEach { change in
-            self.handleDocumentChange(change)
+        snapshot.documentChanges.forEach { [weak self] change in
+            self?.handleDocumentChange(change)
         }
         messagesCollectionView.reloadData()
         scrollToBottom()
@@ -460,6 +464,7 @@ extension ChatViewController: MessageCellDelegate {
         guard let indexPath = messagesCollectionView.indexPath(for: cell) else { return }
         let message = messages[indexPath.section]
         if let del = chatMessageDelegate {
+            messageTapped = true
             let _ = del.didTapMessage(for: message)
         }
     }
