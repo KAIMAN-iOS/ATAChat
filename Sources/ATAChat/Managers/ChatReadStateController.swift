@@ -17,8 +17,8 @@ public struct ChatRead: Hashable, Equatable, CustomDebugStringConvertible {
     public static func == (lhs: ChatRead, rhs: ChatRead) -> Bool {
         return lhs.hashValue == rhs.hashValue
     }
-    let channelId: String
-    let userId: String
+    public let channelId: String
+    public let userId: String
     public let count: Int
     let date: Date
     
