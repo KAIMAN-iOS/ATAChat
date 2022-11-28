@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/firebase/abseil-cpp-SwiftPM.git",
         "state": {
           "branch": null,
-          "revision": "fffc3c2729be5747390ad02d5100291a0d9ad26a",
-          "version": "0.20200225.4"
+          "revision": "583de9bd60f66b40e78d08599cc92036c2e7e4e1",
+          "version": "0.20220203.2"
         }
       },
       {
@@ -24,8 +24,8 @@
         "repositoryURL": "https://github.com/Alamofire/Alamofire",
         "state": {
           "branch": null,
-          "revision": "f96b619bcb2383b43d898402283924b80e2c4bae",
-          "version": "5.4.3"
+          "revision": "78424be314842833c04bc3bef5b72e85fff99204",
+          "version": "5.6.4"
         }
       },
       {
@@ -33,8 +33,17 @@
         "repositoryURL": "https://github.com/darjeelingsteve/Ampersand",
         "state": {
           "branch": null,
-          "revision": "9498afe66ef14428c80647a4b1046c9aab97655a",
-          "version": "1.1.0"
+          "revision": "4c35dbed17551133c880d0a095029285875da7fe",
+          "version": "1.2.1"
+        }
+      },
+      {
+        "package": "ATACommonObjects",
+        "repositoryURL": "https://github.com/KAIMAN-iOS/ATACommonObjects",
+        "state": {
+          "branch": "master",
+          "revision": "f4f6bd2a918b22973cd64626c3586f6639a93875",
+          "version": null
         }
       },
       {
@@ -42,7 +51,7 @@
         "repositoryURL": "https://github.com/KAIMAN-iOS/ATAConfiguration",
         "state": {
           "branch": "master",
-          "revision": "bee5d53f06f15f9a7c036bc7ed29e504eb230c35",
+          "revision": "aa7a5616b132fa09f5b7f3899b8f35a8a978c88e",
           "version": null
         }
       },
@@ -51,7 +60,7 @@
         "repositoryURL": "https://github.com/KAIMAN-iOS/ATAViews",
         "state": {
           "branch": "master",
-          "revision": "fc0dea300071747f684777a825c3ff0c9a883e1c",
+          "revision": "73008c2170aac4cf0526e93a6d41be893ffe3c78",
           "version": null
         }
       },
@@ -60,17 +69,17 @@
         "repositoryURL": "https://github.com/firebase/boringssl-SwiftPM.git",
         "state": {
           "branch": null,
-          "revision": "734a8247442fde37df4364c21f6a0085b6a36728",
-          "version": "0.7.2"
+          "revision": "dd3eda2b05a3f459fc3073695ad1b28659066eab",
+          "version": "0.9.1"
         }
       },
       {
-        "package": "Cache",
-        "repositoryURL": "https://github.com/hyperoslo/Cache",
+        "package": "Defaults",
+        "repositoryURL": "https://github.com/sindresorhus/Defaults",
         "state": {
-          "branch": "master",
-          "revision": "520b1afd229e25051878c65ce1e780628ea43b4d",
-          "version": null
+          "branch": null,
+          "revision": "981ccb0a01c54abbe3c12ccb8226108527bbf115",
+          "version": "6.3.0"
         }
       },
       {
@@ -87,8 +96,8 @@
         "repositoryURL": "https://github.com/firebase/firebase-ios-sdk.git",
         "state": {
           "branch": null,
-          "revision": "b8e974d8863536e93c1dd3ea65477a65d671847e",
-          "version": "8.5.0"
+          "revision": "c24031ad9410c746c49deddc739fdf311a386fc7",
+          "version": "10.2.0"
         }
       },
       {
@@ -96,8 +105,8 @@
         "repositoryURL": "https://github.com/google/GoogleAppMeasurement.git",
         "state": {
           "branch": null,
-          "revision": "06e74ef7ee7326e1af724d462091eed1e5c6fb4a",
-          "version": "8.3.1"
+          "revision": "71eb6700dd53a851473c48d392f00a3ab26699a6",
+          "version": "10.1.0"
         }
       },
       {
@@ -105,8 +114,8 @@
         "repositoryURL": "https://github.com/google/GoogleDataTransport.git",
         "state": {
           "branch": null,
-          "revision": "9e79fd8deddbef5646fbb5dbb3eaf963e338f007",
-          "version": "9.1.0"
+          "revision": "5056b15c5acbb90cd214fe4d6138bdf5a740e5a8",
+          "version": "9.2.0"
         }
       },
       {
@@ -114,17 +123,17 @@
         "repositoryURL": "https://github.com/google/GoogleUtilities.git",
         "state": {
           "branch": null,
-          "revision": "beb713a16b50a4df3162b3f3ecdeffa16b74b773",
-          "version": "7.5.0"
+          "revision": "6db6edb48bdd9943426562c7f042a5492de5ba3d",
+          "version": "7.10.0"
         }
       },
       {
         "package": "gRPC",
-        "repositoryURL": "https://github.com/firebase/grpc-SwiftPM.git",
+        "repositoryURL": "https://github.com/grpc/grpc-ios.git",
         "state": {
           "branch": null,
-          "revision": "fb405dd2c7901485f7e158b24e3a0a47e4efd8b5",
-          "version": "1.28.4"
+          "revision": "8440b914756e0d26d4f4d054a1c1581daedfc5b6",
+          "version": "1.44.3-grpc"
         }
       },
       {
@@ -132,8 +141,8 @@
         "repositoryURL": "https://github.com/google/gtm-session-fetcher.git",
         "state": {
           "branch": null,
-          "revision": "424886f9336a71891aa81852d0c2c08d807d21aa",
-          "version": "1.6.1"
+          "revision": "efda500b6d9858d38a76dbfbfa396bd644692e4a",
+          "version": "3.0.0"
         }
       },
       {
@@ -141,16 +150,7 @@
         "repositoryURL": "https://github.com/efremidze/Haptica",
         "state": {
           "branch": "master",
-          "revision": "4084702c85102c2d17d58e42ec5a750094944864",
-          "version": null
-        }
-      },
-      {
-        "package": "Imaginary",
-        "repositoryURL": "https://github.com/hyperoslo/Imaginary",
-        "state": {
-          "branch": "master",
-          "revision": "5da646269754856f60ae463652858f64dfe4d4e5",
+          "revision": "6f9e9f97ec0a7394dc6af50e86c7d5ea1d28b2cc",
           "version": null
         }
       },
@@ -159,8 +159,8 @@
         "repositoryURL": "https://github.com/nathantannar4/InputBarAccessoryView",
         "state": {
           "branch": null,
-          "revision": "f5e21ad31f7e747ae08eae91b6fc6d2348bb750d",
-          "version": "5.3.1"
+          "revision": "2843b4454cfb6de5b4d1e5939fef2dd6257b69ee",
+          "version": "5.5.0"
         }
       },
       {
@@ -177,17 +177,17 @@
         "repositoryURL": "https://github.com/KAIMAN-iOS/KExtensions",
         "state": {
           "branch": "master",
-          "revision": "4ff83a59c9e51088fd32804f493cd08f1e4b2b7d",
+          "revision": "1939fdb6eddc4cd1c53c7de2fba4d2d9e53e15d2",
           "version": null
         }
       },
       {
         "package": "KStorage",
-        "repositoryURL": "https://github.com/jerometonnelier/KStorage",
+        "repositoryURL": "https://github.com/KAIMAN-iOS/KStorage",
         "state": {
-          "branch": null,
-          "revision": "330de84d7b9601468a842c099c7627069ab92016",
-          "version": "1.0.0"
+          "branch": "master",
+          "revision": "92390107f52b6215f15254cd3ad765c820c29cbc",
+          "version": null
         }
       },
       {
@@ -204,7 +204,7 @@
         "repositoryURL": "https://github.com/hyperoslo/Lightbox",
         "state": {
           "branch": "master",
-          "revision": "a07de07adbdd89860af2abfd3435d99f09bd7bff",
+          "revision": "2ac28e0497b9803e2f2ee827a4adf4dee8810967",
           "version": null
         }
       },
@@ -213,8 +213,8 @@
         "repositoryURL": "https://github.com/airbnb/lottie-ios",
         "state": {
           "branch": null,
-          "revision": "79a0b70547f7c40ea54c67487f935fa2f2eaaadc",
-          "version": "3.2.3"
+          "revision": "b4bd0604ded9574807f41b4004b57dd1226a30a4",
+          "version": "3.5.0"
         }
       },
       {
@@ -222,8 +222,8 @@
         "repositoryURL": "https://github.com/MessageKit/MessageKit",
         "state": {
           "branch": null,
-          "revision": "7ec2a9680af3af0eee06d503362f48ef79374db1",
-          "version": "3.6.1"
+          "revision": "84236d91ac5783e3ecbefc15b82d854476720115",
+          "version": "3.8.0"
         }
       },
       {
@@ -231,8 +231,8 @@
         "repositoryURL": "https://github.com/firebase/nanopb.git",
         "state": {
           "branch": null,
-          "revision": "7ee9ef9f627d85cbe1b8c4f49a3ed26eed216c77",
-          "version": "2.30908.0"
+          "revision": "819d0a2173aff699fb8c364b6fb906f7cdb1a692",
+          "version": "2.30909.0"
         }
       },
       {
@@ -263,12 +263,21 @@
         }
       },
       {
+        "package": "PhoneNumberKit",
+        "repositoryURL": "https://github.com/KAIMAN-iOS/PhoneNumberKit",
+        "state": {
+          "branch": null,
+          "revision": "d73665b4ae26aa57245bd4fdc5b6bab7a18033f3",
+          "version": "4.0.0"
+        }
+      },
+      {
         "package": "PromiseKit",
         "repositoryURL": "https://github.com/mxcl/PromiseKit",
         "state": {
           "branch": null,
-          "revision": "d2f7ba14bcdc45e18f4f60ad9df883fb9055f081",
-          "version": "6.15.3"
+          "revision": "43772616c46a44a9977e41924ae01d0e55f2f9ca",
+          "version": "6.18.1"
         }
       },
       {
@@ -276,8 +285,17 @@
         "repositoryURL": "https://github.com/google/promises.git",
         "state": {
           "branch": null,
-          "revision": "611337c330350c9c1823ad6d671e7f936af5ee13",
-          "version": "2.0.0"
+          "revision": "3e4e743631e86c8c70dbc6efdc7beaa6e90fd3bb",
+          "version": "2.1.1"
+        }
+      },
+      {
+        "package": "SDWebImage",
+        "repositoryURL": "https://github.com/SDWebImage/SDWebImage.git",
+        "state": {
+          "branch": null,
+          "revision": "3312bf5e67b52fbce7c3caf431b0cda721a9f7bb",
+          "version": "5.14.2"
         }
       },
       {
@@ -285,8 +303,8 @@
         "repositoryURL": "https://github.com/SnapKit/SnapKit",
         "state": {
           "branch": null,
-          "revision": "d458564516e5676af9c70b4f4b2a9178294f1bc6",
-          "version": "5.0.1"
+          "revision": "f222cbdf325885926566172f6f5f06af95473158",
+          "version": "5.6.0"
         }
       },
       {
@@ -294,8 +312,8 @@
         "repositoryURL": "https://github.com/apple/swift-protobuf.git",
         "state": {
           "branch": null,
-          "revision": "1f62db409f2c9b0223a3f68567b4a01333aae778",
-          "version": "1.17.0"
+          "revision": "ab3a58b7209a17d781c0d1dbb3e1ff3da306bae8",
+          "version": "1.20.3"
         }
       },
       {
@@ -308,8 +326,17 @@
         }
       },
       {
+        "package": "SwiftLocation",
+        "repositoryURL": "https://github.com/malcommac/SwiftLocation",
+        "state": {
+          "branch": null,
+          "revision": "f8ec8e97095eb3a5312370ad94b921768217625f",
+          "version": "5.1.0"
+        }
+      },
+      {
         "package": "TextFieldEffects",
-        "repositoryURL": "https://github.com/jerometonnelier/TextFieldEffects",
+        "repositoryURL": "https://github.com/KAIMAN-iOS/TextFieldEffects",
         "state": {
           "branch": "master",
           "revision": "1d35118960037a8b777a11f388b7ff976835fec7",

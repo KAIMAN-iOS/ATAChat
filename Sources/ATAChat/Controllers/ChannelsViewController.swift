@@ -273,7 +273,9 @@ class ChannelsViewController: UITableViewController {
             return section(for: groupTypes.first(where: { $0.groupTypeName == Ride.webChannelPrefix }))
         }
         guard let group = groups.first(where: { $0.groupId == channel.id }),
-              let groupType = groupTypes.first(where: { $0.groupTypeId == group.groupTypeId }) else { return nil }
+              let groupType = groupTypes.first(where: { $0.groupTypeId == group.groupTypeId }) else {
+            return nil
+        }
         return section(for: groupType)
     }
     

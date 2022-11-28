@@ -42,6 +42,7 @@ import UIViewControllerExtension
 import Lightbox
 import Nuke
 import Combine
+import FirebaseStorage
 
 final class ChatViewController: MessagesViewController {
     var conf: ATAConfiguration = ChannelsViewController.conf
